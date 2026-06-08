@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بازی حافظه | هیئت زوارالزهرا</title>
 
-    <!-- Preload the custom font for early discovery (non-blocking) -->
+    <!-- Preload the local font for early discovery -->
     <link rel="preload" href="source/Yekan.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
-    <!-- Async font loading with media="print" trick – becomes 'all' after load -->
+    <!-- Async font loading using media="print" trick -->
     <style media="print" onload="this.media='all'">
         @font-face {
             font-family: 'Yekan';
             src: url('source/Yekan.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
-            font-display: swap;  /* ensures text is visible immediately with fallback */
+            font-display: swap;
         }
     </style>
 
@@ -200,7 +200,6 @@
             cursor: pointer;
             animation: cardAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
             position: relative;
-            /* Touch optimization */
             touch-action: manipulation;
             will-change: transform;
         }
@@ -282,7 +281,7 @@
             overflow: hidden;
         }
 
-        /* Card back using back.jpg */
+        /* Card back – uses back.jpg from source */
         .card-back {
             background-image: url('source/back.jpg');
             background-size: cover;
@@ -337,8 +336,8 @@
             height: 100%;
             object-fit: contain;
             border-radius: 12px;
-            /* Lazy loading for off-screen images */
             loading: lazy;
+            decoding: async;
         }
         .card-front .card-text {
             font-size: 1.15rem;
@@ -696,7 +695,7 @@
             const btnReplay = document.getElementById('btnReplay');
             const confettiContainer = document.getElementById('confettiContainer');
 
-            // All 15 pairs with images from source folder (null for emoji fallback)
+            // 15 pairs – those with an image property get real photos from source/
             const allPairDefinitions = [
                 { pairId: 1,  text: 'اردوی شمال',              emoji: '🏖',   image: 'shomal.jpg' },
                 { pairId: 2,  text: 'المپیک تابستانی',          emoji: '⚽️',   image: 'olampyc.jpg' },
@@ -727,16 +726,11 @@
             let isChecking = false;
             let gameOver = false;
 
-            // Audio context – created only after first user interaction (suspended by default)
+            // Audio – suspended until user interacts
             let audioCtx = null;
             function ensureAudioContext() {
-                if (!audioCtx) {
-                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-                    // audioCtx.state is 'suspended' – no sound until user gesture
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
+                if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
             }
             function playTone(freq, dur, type = 'sine', vol = 0.25, delay = 0) {
                 if (!audioCtx) return;
@@ -777,9 +771,7 @@
             function buildCardsFromPairs(pairsArr) {
                 const cardsArr = [];
                 pairsArr.forEach(pair => {
-                    // Text card
                     cardsArr.push({ id: `text-${pair.pairId}`, pairId: pair.pairId, type: 'text', content: pair.text });
-                    // Image or emoji card
                     if (pair.image) {
                         cardsArr.push({ id: `image-${pair.pairId}`, pairId: pair.pairId, type: 'image', content: pair.image });
                     } else {
@@ -810,7 +802,6 @@
                     front.className = 'card-face card-front';
 
                     if (cardData.type === 'image') {
-                        // Image with lazy loading and async decoding
                         front.innerHTML = `<div class="card-image"><img src="source/${cardData.content}" alt="${cardData.content}" loading="lazy" decoding="async"></div>`;
                     } else if (cardData.type === 'emoji') {
                         front.innerHTML = `<div class="card-emoji">${cardData.content}</div>`;
