@@ -11,13 +11,11 @@
             --card-back: #1a5c34;
             --gold: #c9a84c;
             --gold-light: #e0c878;
-            --text-dark: #2c2416;
             --green-border: #2ecc71;
             --surface: #ffffff;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
             --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.18);
             --radius: 18px;
-            --transition: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -38,6 +36,11 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
+            animation: bgShift 20s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift {
+            0% { background: linear-gradient(160deg, #fef9f0 0%, #fdf3e0 30%, #fefaf5 60%, #fdf5e8 100%); }
+            100% { background: linear-gradient(160deg, #fdf8eb 0%, #fef4e5 30%, #fffcf7 60%, #fdf6ea 100%); }
         }
 
         body::before {
@@ -46,11 +49,16 @@
             inset: 0;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.035;
+            opacity: 0.025;
             background-image: radial-gradient(circle at 20% 30%, #1a5c34 1px, transparent 1px),
                 radial-gradient(circle at 75% 60%, #c9a84c 1.5px, transparent 1.5px),
                 radial-gradient(circle at 50% 85%, #1a5c34 0.8px, transparent 0.8px);
             background-size: 80px 80px, 110px 110px, 65px 65px;
+            animation: patternDrift 30s linear infinite;
+        }
+        @keyframes patternDrift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 20px); }
         }
 
         .header {
@@ -82,6 +90,11 @@
             margin: 0 6px;
             vertical-align: middle;
             box-shadow: 0 0 8px rgba(201, 168, 76, 0.6);
+            animation: dotGlow 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes dotGlow {
+            0% { box-shadow: 0 0 5px rgba(201,168,76,0.4); }
+            100% { box-shadow: 0 0 12px rgba(201,168,76,0.9); }
         }
         .header .tagline {
             font-size: 0.95rem;
@@ -172,6 +185,7 @@
             min-height: 180px;
             cursor: pointer;
             animation: cardAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            position: relative;
         }
         @keyframes cardAppear {
             0% { opacity: 0; transform: scale(0.7) rotateY(90deg); }
@@ -185,13 +199,45 @@
         .card-container.matched {
             cursor: default;
         }
+        .card-container.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(4px); }
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+            animation: rippleEffect 0.6s ease-out forwards;
+        }
+        @keyframes rippleEffect {
+            to {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
 
         .card {
             position: relative;
             width: 100%;
             height: 100%;
             transform-style: preserve-3d;
-            transition: transform var(--transition), box-shadow 0.4s ease;
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
         }
@@ -229,13 +275,48 @@
             overflow: hidden;
         }
 
+        /* ── New Islamic arabesque back design ── */
         .card-back {
-            background: linear-gradient(145deg, #1a5c34 0%, #145228 40%, #1a5c34 70%, #0f4220 100%);
+            background-color: #1a5c34;
             border: 3px solid #2a7044;
-            box-shadow: inset 0 0 0 2px rgba(201, 168, 76, 0.5);
             z-index: 2;
             position: relative;
+            overflow: hidden;
+            /* intricate geometric pattern using SVG */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%23c9a84c' stroke-width='0.8' opacity='0.3'%3E%3Cpath d='M30 5 L35 25 L55 30 L35 35 L30 55 L25 35 L5 30 L25 25 Z'/%3E%3Ccircle cx='30' cy='30' r='4' fill='%23c9a84c'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 60px 60px;
+            animation: arabesqueRotate 40s linear infinite;
         }
+        @keyframes arabesqueRotate {
+            0% { background-position: 0 0; }
+            100% { background-position: 60px 60px; }
+        }
+        /* Central 8-pointed star */
+        .card-back::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #c9a84c;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: 0 0 18px rgba(201, 168, 76, 0.6);
+            z-index: 4;
+        }
+        /* Corner ornaments */
+        .card-back .inner-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #e0c878;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(224, 200, 120, 0.7);
+            z-index: 5;
+        }
+        .dot-tl { top: 14px; left: 14px; }
+        .dot-tr { top: 14px; right: 14px; }
+        .dot-bl { bottom: 14px; left: 14px; }
+        .dot-br { bottom: 14px; right: 14px; }
+        /* Shimmer overlay */
         .card-back::before {
             content: '';
             position: absolute;
@@ -250,31 +331,8 @@
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        .card-back::after {
-            content: '';
-            position: absolute;
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #c9a84c 0%, #e0c878 50%, #b8943a 100%);
-            transform: rotate(45deg);
-            border-radius: 6px;
-            box-shadow: 0 0 18px rgba(201, 168, 76, 0.5), inset 0 0 6px rgba(255, 255, 255, 0.3);
-            z-index: 4;
-        }
-        .card-back .inner-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #e0c878;
-            border-radius: 50%;
-            box-shadow: 0 0 6px rgba(224, 200, 120, 0.7);
-            z-index: 5;
-        }
-        .dot-tl { top: 14px; left: 14px; }
-        .dot-tr { top: 14px; right: 14px; }
-        .dot-bl { bottom: 14px; left: 14px; }
-        .dot-br { bottom: 14px; right: 14px; }
 
+        /* front face */
         .card-front {
             background: linear-gradient(160deg, #fffefb 0%, #fefcf6 40%, #fffdf8 100%);
             border: 3px solid #e8dbb8;
@@ -293,6 +351,11 @@
             justify-content: center;
             flex: 1;
             transition: transform 0.3s;
+            animation: floatEmoji 3s ease-in-out infinite;
+        }
+        @keyframes floatEmoji {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
         .card-front .card-text {
             font-size: 1.15rem;
@@ -308,6 +371,7 @@
             hyphens: auto;
         }
 
+        /* hover */
         .card-container:hover .card:not(.flipped):not(.matched-glow) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
             transform: scale(1.04);
@@ -334,6 +398,11 @@
             box-shadow: 0 6px 22px rgba(26, 92, 52, 0.3);
             transition: all 0.3s;
             letter-spacing: 0.5px;
+            animation: buttonGlow 2s ease-in-out infinite alternate;
+        }
+        @keyframes buttonGlow {
+            0% { box-shadow: 0 6px 22px rgba(26,92,52,0.3); }
+            100% { box-shadow: 0 6px 28px rgba(201,168,76,0.5); }
         }
         .btn-reset:hover {
             background: linear-gradient(135deg, #22703f 0%, #2a8048 50%, #22703f 100%);
@@ -601,19 +670,27 @@
             const btnReplay = document.getElementById('btnReplay');
             const confettiContainer = document.getElementById('confettiContainer');
 
-            // All 6 possible pairs
+            // Expanded list: 15 pairs (original + new)
             const allPairDefinitions = [
-                { pairId: 1, text: 'اردوی شمال', emoji: '🏖' },
-                { pairId: 2, text: 'المپیک تابستانی', emoji: '⚽️' },
-                { pairId: 3, text: 'اردوی مشهد', emoji: '8️⃣' },
-                { pairId: 4, text: 'برهان', emoji: '📝' },
-                { pairId: 5, text: 'اعتکاف رجبیه', emoji: '🕌' },
-                { pairId: 6, text: 'اردوهای علمی', emoji: '🌇' },
+                { pairId: 1,  text: 'اردوی شمال', emoji: '🏖' },
+                { pairId: 2,  text: 'المپیک تابستانی', emoji: '⚽️' },
+                { pairId: 3,  text: 'اردوی مشهد', emoji: '8️⃣' },
+                { pairId: 4,  text: 'برهان', emoji: '📝' },
+                { pairId: 5,  text: 'اعتکاف رجبیه', emoji: '🕌' },
+                { pairId: 6,  text: 'اردوهای علمی', emoji: '🌇' },
+                { pairId: 7,  text: 'اردوی راهیان نور', emoji: '🚌' },
+                { pairId: 8,  text: 'راهپیمایی اربعین', emoji: '🚶‍♂️' },
+                { pairId: 9,  text: 'مراسم فاطمیه و محرم', emoji: '🏴' },
+                { pairId: 10, text: 'مراسم شب قدر', emoji: '🌙' },
+                { pairId: 11, text: 'هیئت هفتگی', emoji: '🤲' },
+                { pairId: 12, text: 'کلاس های لذت علم', emoji: '🔬' },
+                { pairId: 13, text: 'کلاس های کمک درسی', emoji: '📚' },
+                { pairId: 14, text: 'کلاس های اخلاق و سیره', emoji: '📖' },
+                { pairId: 15, text: 'کارگاه های مهارت آموزی', emoji: '🛠️' }
             ];
 
-            // Active game state
             let cards = [];
-            let activePairsCount = 4; // number of pairs currently in play
+            let activePairsCount = 4;
             let flippedCardElements = [];
             let matchedPairIds = new Set();
             let attempts = 0;
@@ -707,7 +784,7 @@
                     card.appendChild(back);
                     card.appendChild(front);
                     container.appendChild(card);
-                    container.addEventListener('click', () => onCardClick(container));
+                    container.addEventListener('click', (e) => onCardClick(container, e));
                     gameGrid.appendChild(container);
                 });
             }
@@ -740,14 +817,28 @@
             function updateStats() {
                 attemptsCountEl.textContent = attempts.toLocaleString('fa-IR');
                 errorsCountEl.textContent = errors.toLocaleString('fa-IR');
-                const remaining = activePairsCount - matchedPairIds.size;
-                remainingPairsEl.textContent = remaining.toLocaleString('fa-IR');
+                remainingPairsEl.textContent = (activePairsCount - matchedPairIds.size).toLocaleString('fa-IR');
             }
 
             function calculateScore() { return Math.max(0, 5000 - (errors * 80) - (timerSeconds * 5)); }
 
-            function onCardClick(cardContainer) {
+            function addRipple(container, e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                container.appendChild(ripple);
+                ripple.addEventListener('animationend', () => ripple.remove());
+            }
+
+            function onCardClick(cardContainer, event) {
                 if (gameOver || isPreviewing || isChecking || isCardMatched(cardContainer) || isCardFlipped(cardContainer) || flippedCardElements.length >= 2) return;
+
+                // Ripple effect
+                addRipple(cardContainer, event);
                 playSoundClick();
                 flipCardUp(cardContainer);
                 flippedCardElements.push(cardContainer);
@@ -772,7 +863,12 @@
                         }, 350);
                     } else {
                         errors++; updateStats();
+                        // Add shake animation to both cards
+                        a.classList.add('shake');
+                        b.classList.add('shake');
                         setTimeout(() => {
+                            a.classList.remove('shake');
+                            b.classList.remove('shake');
                             playSoundError();
                             flipCardDown(a); flipCardDown(b);
                             flippedCardElements = [];
@@ -835,15 +931,13 @@
                 winOverlay.classList.remove('active');
                 confettiContainer.innerHTML = '';
 
-                // Randomly select 4 pairs from the master list
                 const shuffledPairs = shuffleArray(allPairDefinitions);
                 const selectedPairs = shuffledPairs.slice(0, 4);
-                activePairsCount = selectedPairs.length; // should be 4
+                activePairsCount = selectedPairs.length;
 
-                // Build and shuffle cards for the selected pairs
                 cards = shuffleArray(buildCardsFromPairs(selectedPairs));
                 renderCards(cards);
-                updateStats(); // will show remaining = 4
+                updateStats();
                 setAllClickable(false);
                 startPreview();
             }
@@ -857,4 +951,4 @@
         })();
     </script>
 </body>
-  </html>
+</html>
