@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بازی حافظه | هیئت زوارالزهرا</title>
-    <!-- Using local variable font Estedad from GitHub repo root -->
-    <style>
-        /* Load the custom variable font */
-        @font-face {
-            font-family: 'Estedad';
-            src: url('Estedad%5Bwght%2Ckshd%5D.ttf') format('truetype');
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-        }
 
+    <!-- Preload the custom font for early discovery (non-blocking) -->
+    <link rel="preload" href="source/Yekan.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+    <!-- Async font loading with media="print" trick – becomes 'all' after load -->
+    <style media="print" onload="this.media='all'">
+        @font-face {
+            font-family: 'Yekan';
+            src: url('source/Yekan.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;  /* ensures text is visible immediately with fallback */
+        }
+    </style>
+
+    <style>
         :root {
             --bg: #fdf8f0;
             --card-back: #1a5c34;
@@ -34,7 +39,7 @@
         }
 
         body {
-            font-family: 'Estedad', 'Vazirmatn', 'Tahoma', 'Segoe UI', sans-serif;
+            font-family: 'Yekan', 'Vazirmatn', 'Tahoma', 'Segoe UI', sans-serif;
             background: linear-gradient(160deg, #fef9f0 0%, #fdf3e0 30%, #fefaf5 60%, #fdf5e8 100%);
             background-attachment: fixed;
             min-height: 100vh;
@@ -195,6 +200,9 @@
             cursor: pointer;
             animation: cardAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
             position: relative;
+            /* Touch optimization */
+            touch-action: manipulation;
+            will-change: transform;
         }
         @keyframes cardAppear {
             0% { opacity: 0; transform: scale(0.7) rotateY(90deg); }
@@ -207,16 +215,6 @@
         }
         .card-container.matched {
             cursor: default;
-        }
-        .card-container.shake {
-            animation: shake 0.5s ease-in-out;
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-6px); }
-            80% { transform: translateX(4px); }
         }
 
         .ripple {
@@ -248,6 +246,7 @@
             transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
+            will-change: transform;
         }
         .card.flipped {
             transform: rotateY(180deg);
@@ -283,44 +282,15 @@
             overflow: hidden;
         }
 
-        /* ── Islamic arabesque back design ── */
+        /* Card back using back.jpg */
         .card-back {
-            background-color: #1a5c34;
+            background-image: url('source/back.jpg');
+            background-size: cover;
+            background-position: center;
             border: 3px solid #2a7044;
             z-index: 2;
             position: relative;
-            overflow: hidden;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%23c9a84c' stroke-width='0.8' opacity='0.3'%3E%3Cpath d='M30 5 L35 25 L55 30 L35 35 L30 55 L25 35 L5 30 L25 25 Z'/%3E%3Ccircle cx='30' cy='30' r='4' fill='%23c9a84c'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: 60px 60px;
-            animation: arabesqueRotate 40s linear infinite;
         }
-        @keyframes arabesqueRotate {
-            0% { background-position: 0 0; }
-            100% { background-position: 60px 60px; }
-        }
-        .card-back::after {
-            content: '';
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background: #c9a84c;
-            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            box-shadow: 0 0 18px rgba(201, 168, 76, 0.6);
-            z-index: 4;
-        }
-        .card-back .inner-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #e0c878;
-            border-radius: 50%;
-            box-shadow: 0 0 6px rgba(224, 200, 120, 0.7);
-            z-index: 5;
-        }
-        .dot-tl { top: 14px; left: 14px; }
-        .dot-tr { top: 14px; right: 14px; }
-        .dot-bl { bottom: 14px; left: 14px; }
-        .dot-br { bottom: 14px; right: 14px; }
         .card-back::before {
             content: '';
             position: absolute;
@@ -336,6 +306,7 @@
             100% { background-position: -200% 0; }
         }
 
+        /* Card front */
         .card-front {
             background: linear-gradient(160deg, #fffefb 0%, #fefcf6 40%, #fffdf8 100%);
             border: 3px solid #e8dbb8;
@@ -353,11 +324,21 @@
             align-items: center;
             justify-content: center;
             flex: 1;
-            animation: floatEmoji 3s ease-in-out infinite;
         }
-        @keyframes floatEmoji {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+        .card-front .card-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .card-front .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            /* Lazy loading for off-screen images */
+            loading: lazy;
         }
         .card-front .card-text {
             font-size: 1.15rem;
@@ -400,6 +381,7 @@
             transition: all 0.3s;
             letter-spacing: 0.5px;
             animation: buttonGlow 2s ease-in-out infinite alternate;
+            touch-action: manipulation;
         }
         @keyframes buttonGlow {
             0% { box-shadow: 0 6px 22px rgba(26,92,52,0.3); }
@@ -502,7 +484,6 @@
             font-weight: 900;
         }
 
-        /* ── Promo links: larger & attractive ── */
         .promo-links {
             display: flex;
             gap: 20px;
@@ -526,6 +507,7 @@
             position: relative;
             overflow: hidden;
             border: 2px solid transparent;
+            touch-action: manipulation;
         }
         .promo-link .link-icon {
             font-size: 1.8rem;
@@ -583,6 +565,7 @@
             cursor: pointer;
             box-shadow: 0 6px 20px rgba(201, 168, 76, 0.4);
             transition: all 0.3s;
+            touch-action: manipulation;
         }
         .win-modal .btn-replay:hover {
             transform: translateY(-2px);
@@ -627,7 +610,6 @@
             .card-container { min-width: 100px; min-height: 135px; }
             .card-front .card-emoji { font-size: 2.5rem; }
             .card-front .card-text { font-size: 0.8rem; }
-            .card-back::after { width: 32px; height: 32px; }
             .promo-link { padding: 12px 18px; font-size: 1rem; }
         }
     </style>
@@ -714,22 +696,23 @@
             const btnReplay = document.getElementById('btnReplay');
             const confettiContainer = document.getElementById('confettiContainer');
 
+            // All 15 pairs with images from source folder (null for emoji fallback)
             const allPairDefinitions = [
-                { pairId: 1,  text: 'اردوی شمال', emoji: '🏖' },
-                { pairId: 2,  text: 'المپیک تابستانی', emoji: '⚽️' },
-                { pairId: 3,  text: 'اردوی مشهد', emoji: '8️⃣' },
-                { pairId: 4,  text: 'برهان', emoji: '📝' },
-                { pairId: 5,  text: 'اعتکاف رجبیه', emoji: '🕌' },
-                { pairId: 6,  text: 'اردوهای علمی', emoji: '🌇' },
-                { pairId: 7,  text: 'اردوی راهیان نور', emoji: '🚌' },
-                { pairId: 8,  text: 'راهپیمایی اربعین', emoji: '🚶‍♂️' },
-                { pairId: 9,  text: 'مراسم فاطمیه و محرم', emoji: '🏴' },
-                { pairId: 10, text: 'مراسم شب قدر', emoji: '🌙' },
-                { pairId: 11, text: 'هیئت هفتگی', emoji: '🤲' },
-                { pairId: 12, text: 'کلاس های لذت علم', emoji: '🔬' },
-                { pairId: 13, text: 'کلاس های کمک درسی', emoji: '📚' },
-                { pairId: 14, text: 'کلاس های اخلاق و سیره', emoji: '📖' },
-                { pairId: 15, text: 'کارگاه های مهارت آموزی', emoji: '🛠️' }
+                { pairId: 1,  text: 'اردوی شمال',              emoji: '🏖',   image: 'shomal.jpg' },
+                { pairId: 2,  text: 'المپیک تابستانی',          emoji: '⚽️',   image: 'olampyc.jpg' },
+                { pairId: 3,  text: 'اردوی مشهد',              emoji: '8️⃣',   image: 'mashhad.jpg' },
+                { pairId: 4,  text: 'برهان',                  emoji: '📝',   image: 'borhan.jpg' },
+                { pairId: 5,  text: 'اعتکاف رجبیه',            emoji: '🕌',   image: 'itikaf.jpg' },
+                { pairId: 6,  text: 'اردوهای علمی',            emoji: '🌇',   image: null },
+                { pairId: 7,  text: 'اردوی راهیان نور',        emoji: '🚌',   image: 'rahian.jpg' },
+                { pairId: 8,  text: 'راهپیمایی اربعین',        emoji: '🚶‍♂️', image: 'arbain.jpg' },
+                { pairId: 9,  text: 'مراسم فاطمیه و محرم',    emoji: '🏴',   image: 'moharam.jpg' },
+                { pairId: 10, text: 'مراسم شب قدر',            emoji: '🌙',   image: 'qadr.jpg' },
+                { pairId: 11, text: 'هیئت هفتگی',              emoji: '🤲',   image: 'haftegi.jpg' },
+                { pairId: 12, text: 'کلاس های لذت علم',        emoji: '🔬',   image: null },
+                { pairId: 13, text: 'کلاس های کمک درسی',        emoji: '📚',   image: null },
+                { pairId: 14, text: 'کلاس های اخلاق و سیره',    emoji: '📖',   image: null },
+                { pairId: 15, text: 'کارگاه های مهارت آموزی',  emoji: '🛠️',  image: null }
             ];
 
             let cards = [];
@@ -744,10 +727,16 @@
             let isChecking = false;
             let gameOver = false;
 
+            // Audio context – created only after first user interaction (suspended by default)
             let audioCtx = null;
             function ensureAudioContext() {
-                if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (!audioCtx) {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    // audioCtx.state is 'suspended' – no sound until user gesture
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
             }
             function playTone(freq, dur, type = 'sine', vol = 0.25, delay = 0) {
                 if (!audioCtx) return;
@@ -788,8 +777,14 @@
             function buildCardsFromPairs(pairsArr) {
                 const cardsArr = [];
                 pairsArr.forEach(pair => {
+                    // Text card
                     cardsArr.push({ id: `text-${pair.pairId}`, pairId: pair.pairId, type: 'text', content: pair.text });
-                    cardsArr.push({ id: `emoji-${pair.pairId}`, pairId: pair.pairId, type: 'emoji', content: pair.emoji });
+                    // Image or emoji card
+                    if (pair.image) {
+                        cardsArr.push({ id: `image-${pair.pairId}`, pairId: pair.pairId, type: 'image', content: pair.image });
+                    } else {
+                        cardsArr.push({ id: `emoji-${pair.pairId}`, pairId: pair.pairId, type: 'emoji', content: pair.emoji });
+                    }
                 });
                 return cardsArr;
             }
@@ -810,18 +805,18 @@
 
                     const back = document.createElement('div');
                     back.className = 'card-face card-back';
-                    back.innerHTML = `
-                        <span class="inner-dot dot-tl"></span>
-                        <span class="inner-dot dot-tr"></span>
-                        <span class="inner-dot dot-bl"></span>
-                        <span class="inner-dot dot-br"></span>
-                    `;
 
                     const front = document.createElement('div');
                     front.className = 'card-face card-front';
-                    front.innerHTML = cardData.type === 'emoji'
-                        ? `<div class="card-emoji">${cardData.content}</div>`
-                        : `<div class="card-text">${cardData.content}</div>`;
+
+                    if (cardData.type === 'image') {
+                        // Image with lazy loading and async decoding
+                        front.innerHTML = `<div class="card-image"><img src="source/${cardData.content}" alt="${cardData.content}" loading="lazy" decoding="async"></div>`;
+                    } else if (cardData.type === 'emoji') {
+                        front.innerHTML = `<div class="card-emoji">${cardData.content}</div>`;
+                    } else {
+                        front.innerHTML = `<div class="card-text">${cardData.content}</div>`;
+                    }
 
                     card.appendChild(back);
                     card.appendChild(front);
@@ -904,11 +899,7 @@
                         }, 350);
                     } else {
                         errors++; updateStats();
-                        a.classList.add('shake');
-                        b.classList.add('shake');
                         setTimeout(() => {
-                            a.classList.remove('shake');
-                            b.classList.remove('shake');
                             playSoundError();
                             flipCardDown(a); flipCardDown(b);
                             flippedCardElements = [];
