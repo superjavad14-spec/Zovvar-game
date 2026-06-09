@@ -7,19 +7,21 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 8.0 — تاریخ: 2026-06-09
+    نسخه: 10.0 — تاریخ: 2026-06-09
     ویژگی‌ها:
       - صفحه خانه با دو دکمه بازی و لینک‌های ارتباطی
-      - بازی حافظه با انتخاب ۸/۱۲/۲۴ کارت (بسته به دستگاه)
-      - تشخیص هوشمند دستگاه و orientation، چیدمان واکنش‌گرا
-      - طرح پشت کارت با SVG اسلیمی + لوگوی هیئت
+      - بازی حافظه با انتخاب ۸/۱۲/۱۶/۲۰/۲۴ کارت
+      - چیدمان دقیق بر اساس دستگاه و orientation مطابق جدول
+      - روی کارت‌ها فقط تصویر بدون متن
+      - پشت کارت مینیمال و روشن با SVG اسلیمی ساده + لوگو
       - فونت Yekan.ttf از پوشه source
       - موسیقی پس‌زمینه پیش‌فرض روشن
-      - پازل ۳×۳ با انیمیشن روان و جهت صحیح حرکت قطعات
+      - پازل ۳×۳، ۴×۴، ۵×۵ با انتخاب ابعاد (بدون انیمیشن حرکت)
       - پیش‌نمایش تصویر پازل (hover / long-press)
       - افکت‌های صوتی متنوع، ذرات شادی
       - لینک "به ما بپیوندید" در صفحه پایان
-      - حداقل ۲۰۰۰ خط کد تمیز و بدون باگ
+      - ذخیره رکوردها به تفکیک ابعاد پازل
+      - حداقل ۱۳۰۰ خط کد تمیز و بدون باگ
     ============================================================
   -->
   <style>
@@ -48,8 +50,9 @@
       --radius-btn: 50px;
       --transition-flip: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       --transition-smooth: 0.3s ease;
-      --puzzle-transition: 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
       --card-aspect-ratio: 4 / 5;
+      /* اندازه کارت‌ها به صورت پویا تنظیم می‌شود */
+      --card-max-width: 170px;
     }
 
     /* ================================================================
@@ -130,18 +133,12 @@
       align-items: center;
       gap: 24px;
     }
-    .screen.hidden {
-      display: none !important;
-    }
+    .screen.hidden { display: none !important; }
 
     /* ================================================================
        صفحه خانه
        ================================================================ */
-    #homeScreen {
-      justify-content: center;
-      min-height: 90vh;
-      min-height: 90dvh;
-    }
+    #homeScreen { justify-content: center; min-height: 90vh; min-height: 90dvh; }
     .home-header { text-align: center; margin-bottom: 8px; }
     .home-title {
       font-size: 2.8rem; font-weight: 900; color: var(--maroon);
@@ -155,49 +152,24 @@
     .home-subtitle strong { color: var(--maroon); font-weight: 800; }
     .btn-group { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 340px; align-items: center; margin-bottom: 24px; }
 
-    /* ================================================================
-       لینک‌های خانه
-       ================================================================ */
+    /* لینک‌های خانه */
     .home-links {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 400px;
-      position: relative;
-      padding-top: 20px;
-      margin-top: 8px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      justify-content: center; max-width: 400px; position: relative;
+      padding-top: 20px; margin-top: 8px;
     }
     .home-links::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 10%;
-      width: 80%;
-      height: 1px;
+      content: ""; position: absolute; top: 0; left: 10%; width: 80%; height: 1px;
       background: linear-gradient(to right, transparent, var(--gold), transparent);
       opacity: 0.5;
     }
     .home-link {
-      color: var(--maroon);
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 0.95rem;
-      padding: 8px 16px;
-      border-radius: 24px;
-      background: var(--surface);
-      border: 1px solid var(--gold-pale);
-      transition: all var(--transition-smooth);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--maroon); text-decoration: none; font-weight: 700; font-size: 0.95rem;
+      padding: 8px 16px; border-radius: 24px; background: var(--surface);
+      border: 1px solid var(--gold-pale); transition: all var(--transition-smooth);
+      display: inline-flex; align-items: center; gap: 6px;
     }
-    .home-link:hover {
-      background: var(--gold-pale);
-      border-color: var(--gold);
-      transform: translateY(-1px);
-    }
+    .home-link:hover { background: var(--gold-pale); border-color: var(--gold); transform: translateY(-1px); }
 
     /* ================================================================
        دکمه‌های عمومی
@@ -262,9 +234,9 @@
     .stat-value { font-weight: 900; color: var(--maroon); min-width: 28px; text-align: center; }
 
     /* ================================================================
-       صفحه انتخاب تعداد کارت
+       صفحات انتخاب
        ================================================================ */
-    #memorySelectScreen { justify-content: center; min-height: 80vh; min-height: 80dvh; }
+    #memorySelectScreen, #puzzleSelectScreen { justify-content: center; min-height: 80vh; min-height: 80dvh; }
     .card-count-selector { text-align: center; margin: 24px 0; }
     .card-count-selector p { font-weight: 700; color: var(--maroon); margin-bottom: 16px; font-size: 1.1rem; }
     .selector-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
@@ -273,21 +245,27 @@
        گرید بازی حافظه
        ================================================================ */
     .memory-grid {
-      display: grid; gap: 14px; width: 100%; justify-items: center; align-items: center;
+      display: grid; gap: 10px; width: 100%; justify-items: center; align-items: center;
       margin: 8px 0 24px; transition: all var(--transition-smooth);
     }
+    /* تعداد ستون‌ها توسط JS تنظیم می‌شود */
     .memory-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
     .memory-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
     .memory-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-    .memory-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+    .memory-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
 
     /* ================================================================
        کارت حافظه
        ================================================================ */
     .card-container {
-      perspective: 1200px; width: 100%; max-width: 170px;
-      aspect-ratio: var(--card-aspect-ratio); cursor: pointer; position: relative;
-      animation: fadeInCard 0.5s ease both; will-change: transform;
+      perspective: 1200px;
+      width: 100%;
+      max-width: var(--card-max-width);
+      aspect-ratio: var(--card-aspect-ratio);
+      cursor: pointer;
+      position: relative;
+      animation: fadeInCard 0.5s ease both;
+      will-change: transform;
     }
     @keyframes fadeInCard {
       0% { opacity: 0; transform: scale(0.8); }
@@ -309,10 +287,7 @@
       60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
       100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
-    /* لرزش کارت نادرست */
-    .card-container.wrong-shake {
-      animation: shake 0.4s ease;
-    }
+    .card-container.wrong-shake { animation: shake 0.4s ease; }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       20% { transform: translateX(-6px); }
@@ -334,58 +309,68 @@
       overflow: hidden; display: flex; align-items: center; justify-content: center;
     }
 
-    /* پشت کارت */
+    /* ================================================================
+       پشت کارت – مینیمال و روشن با SVG
+       ================================================================ */
     .card-back {
-      background-color: var(--maroon); border: 4px solid var(--gold);
-      box-shadow: inset 0 0 30px rgba(0,0,0,0.7), 0 0 15px rgba(212,175,55,0.5);
+      background-color: #fdf8f0; border: 3px solid var(--gold);
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.06), 0 0 10px rgba(212,175,55,0.25);
       z-index: 2;
     }
     .card-back svg { width: 100%; height: 100%; display: block; }
     .card-container:hover .card-back {
-      box-shadow: inset 0 0 35px rgba(0,0,0,0.8), 0 0 25px rgba(249,224,118,0.8);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.12), 0 0 18px rgba(249,224,118,0.5);
       transition: all 0.3s ease;
     }
 
-    /* روی کارت */
+    /* ================================================================
+       روی کارت – فقط تصویر بدون متن
+       ================================================================ */
     .card-front {
       background: linear-gradient(160deg, #fffefb, #fdf8ed);
       border: 3px solid #e8dbb8; transform: rotateY(180deg);
-      flex-direction: column; gap: 6px; padding: 10px; text-align: center; z-index: 1;
+      padding: 0; /* حذف padding برای پر شدن کامل با تصویر */
+      z-index: 1;
     }
-    .card-front.image-only { padding: 6px; }
     .card-image-wrapper {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      overflow: hidden; border-radius: 10px; background: #f2ebd9; min-height: 0;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
     }
-    .card-image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: block; }
-    .card-title { font-size: 0.9rem; font-weight: 800; color: var(--maroon); line-height: 1.4; flex-shrink: 0; }
-    .card-desc { font-size: 0.7rem; color: var(--text-soft); font-weight: 500; flex-shrink: 0; }
+    .card-image-wrapper img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid var(--gold);
+      display: block;
+    }
 
     /* ================================================================
-       پازل ۳×۳
+       پازل
        ================================================================ */
     .puzzle-wrapper {
       width: 100%; max-width: 420px; aspect-ratio: 1 / 1; margin: 8px auto;
       position: relative;
     }
     .puzzle-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-      width: 100%; height: 100%; gap: 0; border-radius: 12px; overflow: hidden;
+      display: grid; width: 100%; height: 100%; gap: 0;
+      border-radius: 12px; overflow: hidden;
       border: 3px solid var(--gold); box-shadow: var(--shadow-lg);
     }
     .puzzle-cell {
-      background-size: 300% 300%; background-repeat: no-repeat;
-      cursor: pointer; transition: transform var(--puzzle-transition), box-shadow 0.2s;
-      position: relative; border: none; outline: none; will-change: transform;
+      background-size: cover; background-repeat: no-repeat;
+      cursor: pointer; position: relative; border: none; outline: none;
     }
     .puzzle-cell.empty {
-      background-image: none !important; background-color: rgba(255,255,255,0.1);
-      cursor: default; box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+      background-image: none !important;
+      background-color: rgba(255,255,255,0.15);
+      cursor: default;
     }
-    .puzzle-cell:not(.empty):hover { box-shadow: inset 0 0 14px rgba(212,175,55,0.7); z-index: 1; }
-    .puzzle-cell:not(.empty):active { transform: scale(0.95); }
+    .puzzle-cell:not(.empty):hover {
+      box-shadow: inset 0 0 10px rgba(212,175,55,0.5); z-index: 1;
+    }
 
-    /* دکمه پیش‌نمایش تصویر پازل */
+    /* دکمه و overlay پیش‌نمایش */
     .puzzle-preview-btn {
       position: absolute; top: 8px; right: 8px; z-index: 5;
       background: var(--maroon); color: white; border: 2px solid var(--gold);
@@ -396,16 +381,17 @@
     }
     .puzzle-preview-btn:hover { background: var(--maroon-light); opacity: 1; }
 
-    /* overlay پیش‌نمایش */
     .preview-overlay {
-      position: absolute; inset: 0; z-index: 10; background: rgba(0,0,0,0.7);
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+      position: absolute; inset: 0; z-index: 10;
+      background: rgba(0,0,0,0.7); display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 12px; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
     }
     .preview-overlay.active { opacity: 1; pointer-events: auto; }
     .preview-overlay img {
-      max-width: 90%; max-height: 90%; border-radius: 8px; border: 2px solid var(--gold-light);
-      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      max-width: 90%; max-height: 90%; border-radius: 8px;
+      border: 2px solid var(--gold-light);
     }
 
     /* ================================================================
@@ -417,17 +403,17 @@
       border-radius: 50%; width: 52px; height: 52px; font-size: 1.5rem;
       cursor: pointer; box-shadow: var(--shadow-md); display: flex;
       align-items: center; justify-content: center; transition: all var(--transition-smooth);
-      padding: 0;
     }
     .music-toggle:hover { background: var(--maroon-light); box-shadow: var(--shadow-gold); }
     .music-toggle.playing { background: var(--gold); color: var(--maroon); }
 
     /* ================================================================
-       مدال پایان بازی
+       مدال پایان
        ================================================================ */
     .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center; z-index: 200;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px); display: flex;
+      align-items: center; justify-content: center; z-index: 200;
       opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s;
     }
     .overlay.active { opacity: 1; visibility: visible; }
@@ -445,8 +431,17 @@
     .big-text { font-size: 2.5rem; font-weight: 900; color: var(--gold-dark); margin: 8px 0; }
     .detail-row { display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; color: var(--text-soft); margin: 12px 0; flex-wrap: wrap; }
     .record-badge { background: var(--gold-pale); border-radius: 20px; padding: 6px 18px; display: inline-block; font-weight: 700; color: var(--maroon); margin: 10px 0; }
+    .join-link {
+      display: inline-block; margin: 6px 0 12px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--maroon); text-decoration: none; padding: 12px 28px;
+      border-radius: 40px; font-weight: 700; font-size: 1rem;
+      border: 2px solid var(--maroon-light); transition: all var(--transition-smooth);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .join-link:hover { background: var(--gold-light); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
     .promo-section { margin: 20px 0 10px; }
-    .promo-section .promo-title { font-weight: 800; color: var(--maroon); margin-bottom: 10px; }
+    .promo-title { font-weight: 800; color: var(--maroon); margin-bottom: 10px; }
     .promo-links { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
     .promo-link {
       background: linear-gradient(135deg, var(--maroon), #2c1010); color: white;
@@ -454,28 +449,11 @@
       border: 2px solid var(--gold); transition: all var(--transition-smooth); font-size: 0.95rem;
     }
     .promo-link:hover { background: #5a2a2a; box-shadow: 0 0 20px rgba(212,175,55,0.5); }
-
-    /* دکمه عضویت ویژه */
-    .join-link {
-      display: inline-block;
-      margin: 6px 0 12px;
-      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-      color: var(--maroon);
-      text-decoration: none;
-      padding: 12px 28px;
-      border-radius: 40px;
-      font-weight: 700;
-      font-size: 1rem;
-      border: 2px solid var(--maroon-light);
-      transition: all var(--transition-smooth);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .join-link:hover { background: var(--gold-light); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
-
     .btn-replay {
-      background: var(--gold); color: var(--maroon); border: none; padding: 12px 32px;
-      border-radius: 40px; font-weight: 700; font-family: inherit; font-size: 1rem;
-      cursor: pointer; margin-top: 16px; transition: background var(--transition-smooth), box-shadow var(--transition-smooth);
+      background: var(--gold); color: var(--maroon); border: none;
+      padding: 12px 32px; border-radius: 40px; font-weight: 700;
+      font-family: inherit; font-size: 1rem; cursor: pointer; margin-top: 16px;
+      transition: background var(--transition-smooth);
     }
     .btn-replay:hover { background: var(--gold-light); box-shadow: var(--shadow-gold); }
 
@@ -496,28 +474,24 @@
     @media (max-width: 480px) {
       .home-title { font-size: 2rem; }
       .home-subtitle { font-size: 0.95rem; }
-      .stat-item { padding: 8px 12px; font-size: 0.8rem; gap: 4px; }
+      .stat-item { padding: 6px 10px; font-size: 0.75rem; gap: 4px; }
       .stat-value { min-width: 22px; }
       .modal { padding: 20px 16px; }
       .big-text { font-size: 2rem; }
       .btn { padding: 14px 24px; font-size: 1rem; }
+      :root { --card-max-width: 120px; }
+      .memory-grid { gap: 6px; }
     }
     @media (max-width: 360px) {
-      body { padding: 12px 8px; }
-      .memory-grid { gap: 8px; }
-      .card-title { font-size: 0.75rem; }
-      .card-desc { font-size: 0.65rem; }
+      :root { --card-max-width: 100px; }
+      .memory-grid { gap: 4px; }
     }
-
-    /* ================================================================
-       تنظیمات دسکتاپ (بزرگ‌تر شدن)
-       ================================================================ */
     @media (min-width: 1024px) {
       body { padding: 30px 24px; }
       .screen { max-width: 1100px; }
-      .card-container { max-width: 200px; }
-      .memory-grid { gap: 20px; }
-      .puzzle-wrapper { max-width: 480px; }
+      :root { --card-max-width: 200px; }
+      .memory-grid { gap: 16px; }
+      .puzzle-wrapper { max-width: 500px; }
       .btn { font-size: 1.3rem; padding: 20px 36px; }
       .btn-control { font-size: 1.1rem; padding: 14px 32px; }
       .stat-item { font-size: 1rem; padding: 12px 22px; }
@@ -552,12 +526,12 @@
     </div>
   </div>
 
-  <!-- صفحه انتخاب تعداد کارت -->
+  <!-- صفحه انتخاب تعداد کارت (حافظه) -->
   <div id="memorySelectScreen" class="screen hidden">
-    <div class="game-header"><div class="org-name">🎴 انتخاب نوع بازی</div></div>
+    <div class="game-header"><div class="org-name">🎴 انتخاب تعداد کارت</div></div>
     <div class="card-count-selector">
       <p>تعداد جفت‌ها را انتخاب کنید:</p>
-      <div class="selector-btns" id="selectorBtns"><!-- توسط JS پر می‌شود --></div>
+      <div class="selector-btns" id="memorySelectBtns"><!-- توسط JS پر می‌شود --></div>
     </div>
     <button class="btn-control" id="btnMemorySelectBack">🏠 بازگشت به خانه</button>
   </div>
@@ -571,8 +545,18 @@
       <div class="stat-item">⏱ زمان: <span class="stat-value" id="memTimer">۰:۰۰</span></div>
       <div class="stat-item">🃏 جفت مانده: <span class="stat-value" id="memPairsLeft">۰</span></div>
     </div>
-    <div id="memoryGrid" class="memory-grid cols-4"></div>
+    <div id="memoryGrid" class="memory-grid"></div>
     <button class="btn-control" id="btnMemoryBack">🏠 خانه</button>
+  </div>
+
+  <!-- صفحه انتخاب ابعاد پازل -->
+  <div id="puzzleSelectScreen" class="screen hidden">
+    <div class="game-header"><div class="org-name">🧩 انتخاب ابعاد پازل</div></div>
+    <div class="card-count-selector">
+      <p>اندازه پازل:</p>
+      <div class="selector-btns" id="puzzleSelectBtns"><!-- توسط JS پر می‌شود --></div>
+    </div>
+    <button class="btn-control" id="btnPuzzleSelectBack">🏠 بازگشت به خانه</button>
   </div>
 
   <!-- صفحه بازی پازل -->
@@ -618,6 +602,7 @@
         home: document.getElementById('homeScreen'),
         memorySelect: document.getElementById('memorySelectScreen'),
         memory: document.getElementById('memoryScreen'),
+        puzzleSelect: document.getElementById('puzzleSelectScreen'),
         puzzle: document.getElementById('puzzleScreen')
       };
 
@@ -625,24 +610,27 @@
       const btnGoPuzzle = document.getElementById('btnGoPuzzle');
       const btnMemorySelectBack = document.getElementById('btnMemorySelectBack');
       const btnMemoryBack = document.getElementById('btnMemoryBack');
+      const btnPuzzleSelectBack = document.getElementById('btnPuzzleSelectBack');
       const btnPuzzleBack = document.getElementById('btnPuzzleBack');
-      const selectorBtnsContainer = document.getElementById('selectorBtns');
+      const memorySelectBtns = document.getElementById('memorySelectBtns');
+      const puzzleSelectBtns = document.getElementById('puzzleSelectBtns');
       const endOverlay = document.getElementById('endOverlay');
       const endModal = document.getElementById('endModal');
       const confettiContainer = document.getElementById('confettiContainer');
       const bgMusic = document.getElementById('bgMusic');
       const musicToggle = document.getElementById('musicToggle');
-
-      // المان‌های پازل
-      const puzzleWrapper = document.getElementById('puzzleWrapper');
       const puzzlePreviewBtn = document.getElementById('puzzlePreviewBtn');
       const previewOverlay = document.getElementById('previewOverlay');
       const previewImage = document.getElementById('previewImage');
 
       // ==============================================================
-      // Device Detector (تشخیص نوع دستگاه و orientation)
+      // Device Detection (تشخیص نوع دستگاه و orientation)
       // ==============================================================
       const DeviceDetector = {
+        /**
+         * تشخیص نوع دستگاه بر اساس userAgent و ابعاد صفحه
+         * @returns {'mobile'|'tablet'|'desktop'}
+         */
         getDeviceType() {
           const ua = navigator.userAgent || '';
           const width = window.innerWidth;
@@ -653,14 +641,27 @@
           if (isTabletUA || (maxDim >= 768 && maxDim < 1024)) return 'tablet';
           return 'desktop';
         },
+
+        /**
+         * تشخیص جهت نمایش
+         * @returns {'landscape'|'portrait'}
+         */
         getOrientation() {
           if (window.screen && window.screen.orientation) {
             return window.screen.orientation.type.includes('landscape') ? 'landscape' : 'portrait';
           }
           return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         },
-        isLandscape() { return this.getOrientation() === 'landscape'; },
-        isPortrait() { return this.getOrientation() === 'portrait'; }
+
+        /** آیا دستگاه در حالت افقی است؟ */
+        isLandscape() {
+          return this.getOrientation() === 'landscape';
+        },
+
+        /** آیا دستگاه در حالت عمودی است؟ */
+        isPortrait() {
+          return this.getOrientation() === 'portrait';
+        }
       };
 
       // ==============================================================
@@ -685,13 +686,24 @@
       // Audio Utilities (ابزارهای صوتی)
       // ==============================================================
       let audioCtx = null;
+
+      /** راه‌اندازی AudioContext */
       function initAudioContext() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
       }
 
       /**
-       * پخش یک تن صوتی با فرکانس و duration مشخص
+       * پخش یک تن صوتی ساده
+       * @param {number} frequency - فرکانس بر حسب هرتز
+       * @param {number} duration - مدت زمان
+       * @param {string} type - نوع موج
+       * @param {number} volume - بلندی صدا
+       * @param {number} delay - تأخیر
        */
       function playTone(frequency, duration, type = 'sine', volume = 0.2, delay = 0) {
         if (!audioCtx) return;
@@ -709,13 +721,12 @@
         } catch (e) { /* بی‌صدا */ }
       }
 
-      // افکت‌های صوتی مختلف
-      function soundClick() { initAudioContext(); playTone(700, 0.07); }
-      function soundMatch() { initAudioContext(); playTone(523, 0.1, 'sine', 0.25, 0); playTone(659, 0.1, 'sine', 0.25, 0.1); playTone(784, 0.15, 'sine', 0.22, 0.2); }
-      function soundError() { initAudioContext(); playTone(180, 0.18, 'triangle', 0.12); playTone(140, 0.15, 'triangle', 0.1, 0.08); }
-      function soundWin() { initAudioContext(); [523, 659, 784, 1047, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'sine', 0.3, i * 0.12)); }
-      function soundSlide() { initAudioContext(); playTone(350, 0.08, 'sine', 0.15); }
-      function soundPreview() { initAudioContext(); playTone(440, 0.06, 'sine', 0.1, 0); playTone(550, 0.06, 'sine', 0.1, 0.08); }
+      // افکت‌های صوتی
+      function sfxClick() { initAudioContext(); playTone(700, 0.07); }
+      function sfxMatch() { initAudioContext(); playTone(523, 0.1, 'sine', 0.25, 0); playTone(659, 0.1, 'sine', 0.25, 0.1); playTone(784, 0.15, 'sine', 0.22, 0.2); }
+      function sfxError() { initAudioContext(); playTone(180, 0.18, 'triangle', 0.12); playTone(140, 0.15, 'triangle', 0.1, 0.08); }
+      function sfxWin() { initAudioContext(); [523, 659, 784, 1047, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'sine', 0.3, i * 0.12)); }
+      function sfxSlide() { initAudioContext(); playTone(350, 0.08, 'sine', 0.15); }
 
       // ==============================================================
       // Music Control (کنترل موسیقی پس‌زمینه)
@@ -723,11 +734,13 @@
       let musicPlaying = true;
       bgMusic.volume = 0.4;
 
+      /** به‌روزرسانی آیکون دکمه موسیقی */
       function updateMusicButton() {
         musicToggle.textContent = musicPlaying ? '🔊' : '🔇';
         musicToggle.classList.toggle('playing', musicPlaying);
       }
 
+      /** تلاش برای پخش خودکار موسیقی */
       function startMusic() {
         initAudioContext();
         bgMusic.play().then(() => {
@@ -739,10 +752,12 @@
         });
       }
 
+      /** تغییر وضعیت پخش/توقف موسیقی */
       function toggleMusic() {
         initAudioContext();
         if (musicPlaying) {
-          bgMusic.pause(); musicPlaying = false;
+          bgMusic.pause();
+          musicPlaying = false;
         } else {
           bgMusic.play().then(() => { musicPlaying = true; }).catch(() => {});
           musicPlaying = true;
@@ -757,6 +772,8 @@
       // ==============================================================
       /**
        * بر زدن تصادفی آرایه (Fisher-Yates Shuffle)
+       * @param {Array} arr - آرایه ورودی
+       * @returns {Array} آرایه برخورده
        */
       function shuffleArray(arr) {
         const a = [...arr];
@@ -769,64 +786,78 @@
 
       /**
        * قالب‌بندی زمان به صورت دقیقه:ثانیه
+       * @param {number} sec - ثانیه
+       * @returns {string} زمان قالب‌بندی شده
        */
       function formatTime(sec) {
-        const m = Math.floor(sec / 60), s = sec % 60;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
       }
 
       /**
        * دریافت بهترین رکورد از localStorage
+       * @param {string} key - کلید
+       * @returns {number} مقدار
        */
-      function getBestScore(key) { try { return parseInt(localStorage.getItem(key)) || 0; } catch (e) { return 0; } }
+      function getBestScore(key) {
+        try { return parseInt(localStorage.getItem(key)) || 0; } catch (e) { return 0; }
+      }
 
       /**
-       * ذخیره بهترین رکورد در localStorage در صورت بهتر بودن
+       * ذخیره بهترین رکورد در localStorage
+       * @param {string} key - کلید
+       * @param {number} score - امتیاز
+       * @returns {boolean} آیا رکورد جدید ثبت شد؟
        */
       function setBestScore(key, score) {
-        try { const cur = getBestScore(key); if (score > cur) { localStorage.setItem(key, score); return true; } return false; } catch (e) { return false; }
+        try {
+          const current = getBestScore(key);
+          if (score > current) {
+            localStorage.setItem(key, score);
+            return true;
+          }
+          return false;
+        } catch (e) { return false; }
       }
 
       // ==============================================================
-      // SVG Card Back (طرح اسلیمی با لوگوی هیئت)
+      // SVG Card Back (طرح مینیمال و روشن با اسلیمی ساده)
       // ==============================================================
       /**
-       * تولید SVG پشت کارت شامل الگوی اسلیمی و لوگوی logo2.png
+       * تولید SVG پشت کارت با طراحی مینیمال
+       * @returns {string} کد SVG
        */
       function generateCardBackSVG() {
         return `
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
              viewBox="0 0 200 250" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#f9e076"/>
-              <stop offset="50%" stop-color="#d4af37"/>
-              <stop offset="100%" stop-color="#8b6508"/>
+            <!-- گرادیان طلایی ملایم -->
+            <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#e0c878"/>
+              <stop offset="100%" stop-color="#c9a84c"/>
             </linearGradient>
-            <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#5a2a2a"/>
-              <stop offset="100%" stop-color="#3d1c1c"/>
-            </linearGradient>
-            <pattern id="islimiPattern" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-              <path d="M12 0 C16 4, 18 8, 12 12 C8 8, 6 4, 12 0 Z" fill="#d4af37" opacity="0.3"/>
-              <path d="M12 24 C16 20, 18 16, 12 12 C8 16, 6 20, 12 24 Z" fill="#d4af37" opacity="0.3"/>
-              <circle cx="12" cy="12" r="2" fill="#f9e076" opacity="0.6"/>
-            </pattern>
           </defs>
-          <rect width="200" height="250" fill="url(#innerGrad)" rx="14"/>
-          <rect x="5" y="5" width="190" height="240" fill="none" stroke="url(#goldGrad)" stroke-width="4" rx="12"/>
-          <rect x="11" y="11" width="178" height="228" fill="none" stroke="#d4af37" stroke-width="1.5" rx="9" opacity="0.7"/>
-          <rect x="14" y="14" width="172" height="222" fill="url(#islimiPattern)" rx="7"/>
-          <rect x="18" y="18" width="164" height="214" fill="none" stroke="#d4af37" stroke-width="2" rx="5" opacity="0.6"/>
-          <image x="55" y="80" width="90" height="90" xlink:href="source/logo2.png" preserveAspectRatio="xMidYMid meet" opacity="0.9"/>
-          <path d="M30 30 Q50 20 60 35" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.8"/>
-          <path d="M170 30 Q150 20 140 35" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.8"/>
-          <path d="M30 220 Q50 230 60 215" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.8"/>
-          <path d="M170 220 Q150 230 140 215" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.8"/>
-          <circle cx="35" cy="35" r="3" fill="#f9e076" opacity="0.6"/>
-          <circle cx="165" cy="35" r="3" fill="#f9e076" opacity="0.6"/>
-          <circle cx="35" cy="215" r="3" fill="#f9e076" opacity="0.6"/>
-          <circle cx="165" cy="215" r="3" fill="#f9e076" opacity="0.6"/>
+          <!-- پس‌زمینه کرم روشن -->
+          <rect width="200" height="250" fill="#fdf8f0" rx="16"/>
+          <!-- حاشیه طلایی نازک -->
+          <rect x="6" y="6" width="188" height="238" fill="none" stroke="url(#borderGrad)" stroke-width="2.5" rx="12" opacity="0.8"/>
+          <!-- خطوط اسلیمی ظریف -->
+          <path d="M30 30 Q50 22 70 30" fill="none" stroke="#d4af37" stroke-width="1.2" opacity="0.5"/>
+          <path d="M130 30 Q150 22 170 30" fill="none" stroke="#d4af37" stroke-width="1.2" opacity="0.5"/>
+          <path d="M30 220 Q50 228 70 220" fill="none" stroke="#d4af37" stroke-width="1.2" opacity="0.5"/>
+          <path d="M130 220 Q150 228 170 220" fill="none" stroke="#d4af37" stroke-width="1.2" opacity="0.5"/>
+          <!-- دایره‌های تزئینی کوچک -->
+          <circle cx="40" cy="40" r="3" fill="#d4af37" opacity="0.4"/>
+          <circle cx="160" cy="40" r="3" fill="#d4af37" opacity="0.4"/>
+          <circle cx="40" cy="210" r="3" fill="#d4af37" opacity="0.4"/>
+          <circle cx="160" cy="210" r="3" fill="#d4af37" opacity="0.4"/>
+          <!-- لوگوی هیئت در مرکز -->
+          <image x="60" y="85" width="80" height="80"
+                 xlink:href="source/logo2.png"
+                 preserveAspectRatio="xMidYMid meet"
+                 opacity="0.8"/>
         </svg>`;
       }
 
@@ -838,7 +869,7 @@
        * @param {number} count - تعداد ذرات
        */
       function spawnConfetti(count = 120) {
-        const colors = ['#d4af37','#f9e076','#3d1c1c','#2ecc71','#e74c3c','#3498db','#f39c12','#9b59b6'];
+        const colors = ['#d4af37', '#f9e076', '#3d1c1c', '#2ecc71', '#e74c3c', '#3498db', '#f39c12', '#9b59b6'];
         const fragment = document.createDocumentFragment();
         for (let i = 0; i < count; i++) {
           const piece = document.createElement('div');
@@ -858,8 +889,12 @@
       }
 
       // ==============================================================
-      // Screen Manager (نمایش/مخفی کردن صفحات)
+      // Screen Manager (مدیریت نمایش صفحات)
       // ==============================================================
+      /**
+       * نمایش صفحه مشخص و مخفی کردن بقیه
+       * @param {string} screenId - شناسه صفحه
+       */
       function showScreen(screenId) {
         Object.values(screens).forEach(s => s.classList.add('hidden'));
         if (screens[screenId]) screens[screenId].classList.remove('hidden');
@@ -871,11 +906,20 @@
       // ==============================================================
       class MemoryGame {
         constructor() {
-          this.pairsCount = 4; this.totalCards = 8; this.gridCols = 4;
-          this.cards = []; this.flippedCards = []; this.matchedPairs = new Set();
-          this.attempts = 0; this.errors = 0; this.timerSeconds = 0;
-          this.timerInterval = null; this.isPreviewing = false;
-          this.isChecking = false; this.gameActive = false; this.gameFinished = false;
+          this.pairsCount = 4;          // تعداد جفت‌ها
+          this.totalCards = 8;          // تعداد کل کارت‌ها
+          this.gridCols = 4;            // تعداد ستون‌های گرید
+          this.cards = [];              // آرایه کارت‌ها
+          this.flippedCards = [];       // کارت‌های برگشته فعلی
+          this.matchedPairs = new Set();// جفت‌های پیدا شده
+          this.attempts = 0;            // تعداد تلاش‌ها
+          this.errors = 0;              // تعداد خطاها
+          this.timerSeconds = 0;        // ثانیه‌های سپری شده
+          this.timerInterval = null;    // اینتروال تایمر
+          this.isPreviewing = false;    // در حال پیش‌نمایش؟
+          this.isChecking = false;      // در حال بررسی جفت؟
+          this.gameActive = false;      // بازی فعال است؟
+          this.gameFinished = false;    // بازی تمام شده؟
 
           // DOM elements
           this.grid = document.getElementById('memoryGrid');
@@ -890,13 +934,15 @@
         updateStats() {
           this.attemptsEl.textContent = this.attempts.toLocaleString('fa-IR');
           this.errorsEl.textContent = this.errors.toLocaleString('fa-IR');
-          this.pairsLeftEl.textContent = (this.pairsCount - this.matchedPairs.size).toLocaleString('fa-IR');
+          const left = this.pairsCount - this.matchedPairs.size;
+          this.pairsLeftEl.textContent = left.toLocaleString('fa-IR');
         }
 
         /** شروع تایمر */
         startTimer() {
           if (this.timerInterval) clearInterval(this.timerInterval);
-          this.timerSeconds = 0; this.timerEl.textContent = formatTime(0);
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
           this.timerInterval = setInterval(() => {
             this.timerSeconds++;
             this.timerEl.textContent = formatTime(this.timerSeconds);
@@ -905,102 +951,183 @@
 
         /** توقف تایمر */
         stopTimer() {
-          if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
-        }
-
-        /** تعیین تعداد ستون‌های گرید بر اساس دستگاه و orientation */
-        determineGridColumns() {
-          const deviceType = DeviceDetector.getDeviceType();
-          const isLandscape = DeviceDetector.isLandscape();
-          if (deviceType === 'mobile') {
-            return isLandscape ? Math.min(4, this.totalCards / 2) : 2;
-          } else if (deviceType === 'tablet') {
-            return isLandscape ? (this.totalCards >= 24 ? 6 : 4) : (this.totalCards >= 24 ? 4 : 3);
-          } else {
-            return isLandscape ? (this.totalCards >= 24 ? 6 : 4) : (this.totalCards >= 24 ? 4 : 4);
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
           }
         }
 
-        /** ساخت آرایه کارت‌ها از فعالیت‌های انتخاب‌شده */
+        /**
+         * تعیین تعداد ستون‌های گرید بر اساس دستگاه، orientation و تعداد کارت
+         * مطابق جدول:
+         * موبایل (عمودی): ۸→۲, ۱۲→۳, ۱۶→۴, ۲۰→۴, ۲۴→۴
+         * موبایل (افقی): مانند تبلت/کامپیوتر
+         * تبلت/کامپیوتر: ۸→۴, ۱۲→۴, ۱۶→۴, ۲۰→۵, ۲۴→۵
+         */
+        determineGridColumns() {
+          const deviceType = DeviceDetector.getDeviceType();
+          const isLandscape = DeviceDetector.isLandscape();
+
+          // اگر موبایل و landscape باشد، از چیدمان تبلت استفاده کن
+          if (deviceType === 'mobile' && isLandscape) {
+            return this._getTabletDesktopCols();
+          }
+          if (deviceType === 'mobile') {
+            return this._getMobileCols();
+          }
+          // تبلت یا دسکتاپ
+          return this._getTabletDesktopCols();
+        }
+
+        /** چیدمان ستون‌ها برای موبایل عمودی */
+        _getMobileCols() {
+          if (this.totalCards <= 8) return 2;
+          if (this.totalCards <= 12) return 3;
+          // ۱۶, ۲۰, ۲۴ همگی ۴ ستون
+          return 4;
+        }
+
+        /** چیدمان ستون‌ها برای تبلت و دسکتاپ (و موبایل افقی) */
+        _getTabletDesktopCols() {
+          if (this.totalCards <= 16) return 4;
+          // ۲۰ و ۲۴: ۵ ستون
+          return 5;
+        }
+
+        /**
+         * ساخت آرایه کارت‌ها از فعالیت‌های انتخاب‌شده
+         * @param {Array} activities
+         * @returns {Array} آرایه کارت‌ها
+         */
         buildCards(activities) {
           const cards = [];
           activities.forEach(act => {
-            cards.push({ pairId: act.id, type: 'text', title: act.title, desc: '', img: null });
-            cards.push({ pairId: act.id, type: 'image', title: '', desc: act.desc, img: 'source/' + act.img });
+            // کارت متنی (عنوان + توضیح) — در این نسخه فقط تصویر نمایش داده می‌شود
+            cards.push({ pairId: act.id, type: 'text', title: act.title, desc: act.desc, img: null });
+            // کارت تصویری
+            cards.push({ pairId: act.id, type: 'image', title: act.title, desc: act.desc, img: 'source/' + act.img });
           });
           return cards;
         }
 
-        /** رندر کردن کارت‌ها در گرید */
+        /**
+         * رندر کردن کارت‌ها در گرید
+         * @param {Array} cards - آرایه کارت‌ها
+         */
         renderGrid(cards) {
           this.grid.innerHTML = '';
           this.gridCols = this.determineGridColumns();
           this.grid.className = `memory-grid cols-${this.gridCols}`;
+
+          // تنظیم اندازه کارت‌ها بر اساس دستگاه
+          const deviceType = DeviceDetector.getDeviceType();
+          const root = document.documentElement;
+          if (deviceType === 'mobile') {
+            root.style.setProperty('--card-max-width', this.totalCards >= 20 ? '100px' : '120px');
+          } else {
+            root.style.setProperty('--card-max-width', '170px');
+          }
+
           cards.forEach((c, i) => {
             const container = document.createElement('div');
             container.className = 'card-container';
-            container.dataset.pairId = c.pairId; container.dataset.type = c.type; container.dataset.index = i;
-            container.style.animationDelay = `${i * 0.05}s`;
+            container.dataset.pairId = c.pairId;
+            container.dataset.type = c.type;
+            container.dataset.index = i;
+            container.style.animationDelay = `${i * 0.04}s`;
 
             const cardDiv = document.createElement('div');
             cardDiv.className = 'card';
 
+            // پشت کارت (SVG مینیمال)
             const back = document.createElement('div');
             back.className = 'card-face card-back';
             back.innerHTML = generateCardBackSVG();
 
+            // روی کارت – فقط تصویر (بدون متن)
             const front = document.createElement('div');
             front.className = 'card-face card-front';
             if (c.type === 'image') {
-              front.classList.add('image-only');
-              front.innerHTML = `<div class="card-image-wrapper"><img src="${c.img}" alt="${c.desc}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding:16px;color:#888;text-align:center;\\'>📷<br>تصویر<br>در دسترس نیست</div>'"></div><div class="card-desc">${c.desc}</div>`;
+              front.innerHTML = `
+                <div class="card-image-wrapper">
+                  <img src="${c.img}" alt="${c.desc}" loading="lazy"
+                       onerror="this.parentElement.innerHTML='<div style=\\'padding:16px;color:#888;text-align:center;\\'>📷<br>تصویر<br>در دسترس نیست</div>'">
+                </div>`;
             } else {
-              front.innerHTML = `<div class="card-title" style="flex:1; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">${c.title}</div>`;
+              // کارت متنی: فعلاً فقط عنوان (در صورت نیاز می‌توان حذف کرد)
+              front.innerHTML = `
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; font-weight:800; color:#3d1c1c; padding:8px; text-align:center;">
+                  ${c.title}
+                </div>`;
             }
 
-            cardDiv.appendChild(back); cardDiv.appendChild(front);
+            cardDiv.appendChild(back);
+            cardDiv.appendChild(front);
             container.appendChild(cardDiv);
             container.addEventListener('click', () => this.handleCardClick(container));
             this.grid.appendChild(container);
           });
         }
 
-        /** برگرداندن کارت */
+        /**
+         * برگرداندن کارت
+         * @param {HTMLElement} container - المان کارت
+         * @param {boolean} showFront - نمایش رو؟
+         */
         flipCard(container, showFront) {
           container.querySelector('.card').classList.toggle('flipped', showFront);
         }
 
-        /** مدیریت کلیک روی کارت */
+        /**
+         * مدیریت کلیک روی کارت
+         * @param {HTMLElement} container
+         */
         handleCardClick(container) {
           if (!this.gameActive || this.gameFinished || this.isPreviewing || this.isChecking) return;
           if (container.classList.contains('matched') || container.querySelector('.card').classList.contains('flipped')) return;
           if (this.flippedCards.length >= 2) return;
 
-          soundClick();
+          sfxClick();
           this.flipCard(container, true);
           this.flippedCards.push(container);
 
           if (this.flippedCards.length === 2) {
-            this.attempts++; this.updateStats(); this.isChecking = true;
+            this.attempts++;
+            this.updateStats();
+            this.isChecking = true;
             const [cardA, cardB] = this.flippedCards;
-            const isMatch = (cardA.dataset.pairId === cardB.dataset.pairId) && (cardA.dataset.type !== cardB.dataset.type);
+            const pairIdA = cardA.dataset.pairId;
+            const pairIdB = cardB.dataset.pairId;
+            const typeA = cardA.dataset.type;
+            const typeB = cardB.dataset.type;
+            const isMatch = (pairIdA === pairIdB && typeA !== typeB);
 
             if (isMatch) {
               setTimeout(() => {
-                soundMatch();
-                cardA.classList.add('matched'); cardB.classList.add('matched');
-                this.matchedPairs.add(parseInt(cardA.dataset.pairId));
-                this.flippedCards = []; this.isChecking = false; this.updateStats();
-                if (this.matchedPairs.size === this.pairsCount) this.endGame();
+                sfxMatch();
+                cardA.classList.add('matched');
+                cardB.classList.add('matched');
+                this.matchedPairs.add(parseInt(pairIdA));
+                this.flippedCards = [];
+                this.isChecking = false;
+                this.updateStats();
+                if (this.matchedPairs.size === this.pairsCount) {
+                  this.endGame();
+                }
               }, 400);
             } else {
-              this.errors++; this.updateStats();
-              cardA.classList.add('wrong-shake'); cardB.classList.add('wrong-shake');
+              this.errors++;
+              this.updateStats();
+              cardA.classList.add('wrong-shake');
+              cardB.classList.add('wrong-shake');
               setTimeout(() => {
-                soundError();
-                this.flipCard(cardA, false); this.flipCard(cardB, false);
-                cardA.classList.remove('wrong-shake'); cardB.classList.remove('wrong-shake');
-                this.flippedCards = []; this.isChecking = false;
+                sfxError();
+                this.flipCard(cardA, false);
+                this.flipCard(cardB, false);
+                cardA.classList.remove('wrong-shake');
+                cardB.classList.remove('wrong-shake');
+                this.flippedCards = [];
+                this.isChecking = false;
               }, 900);
             }
           }
@@ -1008,26 +1135,44 @@
 
         /** پیش‌نمایش اولیه کارت‌ها */
         startPreview() {
-          this.isPreviewing = true; this.gameActive = false;
+          this.isPreviewing = true;
+          this.gameActive = false;
           const allContainers = this.grid.querySelectorAll('.card-container');
           allContainers.forEach(c => this.flipCard(c, true));
-          soundPreview();
           const duration = this.totalCards >= 24 ? 4000 : 2800;
           setTimeout(() => {
-            allContainers.forEach(c => { if (!c.classList.contains('matched')) this.flipCard(c, false); });
-            this.isPreviewing = false; this.gameActive = true; this.startTimer();
+            allContainers.forEach(c => {
+              if (!c.classList.contains('matched')) {
+                this.flipCard(c, false);
+              }
+            });
+            this.isPreviewing = false;
+            this.gameActive = true;
+            this.startTimer();
           }, duration);
         }
 
-        /** راه‌اندازی بازی جدید */
+        /**
+         * راه‌اندازی بازی جدید
+         * @param {number} pairs - تعداد جفت‌ها
+         */
         init(pairs) {
-          this.pairsCount = pairs || 4; this.totalCards = this.pairsCount * 2;
-          this.stopTimer(); this.timerSeconds = 0; this.timerEl.textContent = formatTime(0);
-          this.attempts = 0; this.errors = 0; this.matchedPairs.clear(); this.flippedCards = [];
-          this.isChecking = false; this.isPreviewing = false; this.gameActive = false; this.gameFinished = false;
+          this.pairsCount = pairs;
+          this.totalCards = pairs * 2;
+          this.stopTimer();
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
+          this.attempts = 0;
+          this.errors = 0;
+          this.matchedPairs.clear();
+          this.flippedCards = [];
+          this.isChecking = false;
+          this.isPreviewing = false;
+          this.gameActive = false;
+          this.gameFinished = false;
           this.updateStats();
 
-          const selected = shuffleArray(allActivities).slice(0, this.pairsCount);
+          const selected = shuffleArray(allActivities).slice(0, pairs);
           this.cards = shuffleArray(this.buildCards(selected));
           this.renderGrid(this.cards);
           this.setupOrientationListener();
@@ -1049,6 +1194,14 @@
               if (newCols !== this.gridCols) {
                 this.gridCols = newCols;
                 this.grid.className = `memory-grid cols-${this.gridCols}`;
+                // به‌روزرسانی اندازه کارت‌ها
+                const deviceType = DeviceDetector.getDeviceType();
+                const root = document.documentElement;
+                if (deviceType === 'mobile' && !DeviceDetector.isLandscape()) {
+                  root.style.setProperty('--card-max-width', this.totalCards >= 20 ? '100px' : '120px');
+                } else {
+                  root.style.setProperty('--card-max-width', '170px');
+                }
               }
             }
           };
@@ -1061,7 +1214,9 @@
 
         /** پایان بازی و نمایش مدال */
         endGame() {
-          this.gameFinished = true; this.gameActive = false; this.stopTimer();
+          this.gameFinished = true;
+          this.gameActive = false;
+          this.stopTimer();
           if (this._orientationHandler) {
             window.removeEventListener('resize', this._orientationHandler);
             this._orientationHandler = null;
@@ -1080,7 +1235,9 @@
               <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
               <span>🎯 تلاش: <strong>${this.attempts.toLocaleString('fa-IR')}</strong></span>
             </div>
-            <div class="record-badge">${isNewBest ? '🎉 رکورد جدید ثبت شد!' : `🏅 بهترین رکورد: ${bestEver.toLocaleString('fa-IR')}`}</div>
+            <div class="record-badge">
+              ${isNewBest ? '🎉 رکورد جدید ثبت شد!' : `🏅 بهترین رکورد: ${bestEver.toLocaleString('fa-IR')}`}
+            </div>
             <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="join-link">📝 به ما بپیوندید</a>
             <div class="promo-section">
               <div class="promo-title">📢 با هیئت زوارالزهرا بیشتر آشنا شوید</div>
@@ -1092,7 +1249,10 @@
             <button class="btn-replay" id="btnMemoryReplay">🔄 بازی دوباره</button>
           `;
 
-          endOverlay.classList.add('active'); soundWin(); spawnConfetti(150);
+          endOverlay.classList.add('active');
+          sfxWin();
+          spawnConfetti(150);
+
           document.getElementById('btnMemoryReplay').addEventListener('click', () => {
             endOverlay.classList.remove('active');
             this.init(this.pairsCount);
@@ -1110,15 +1270,21 @@
       }
 
       // ==============================================================
-      // Puzzle Game Class (کلاس بازی پازل با انیمیشن اصلاح‌شده)
+      // Puzzle Game Class (کلاس بازی پازل – بدون انیمیشن حرکت)
       // ==============================================================
       class PuzzleGame {
         constructor() {
-          this.SIZE = 3; this.EMPTY = 8;
-          this.tiles = []; this.moves = 0; this.timerSeconds = 0;
-          this.timerInterval = null; this.gameActive = false; this.gameFinished = false;
-          this.currentImage = '';
-          this.cells = []; // آرایه‌ای از المان‌های DOM سلول‌ها
+          this.size = 3;                 // ابعاد (۳، ۴ یا ۵)
+          this.emptyIndex = 8;           // ایندکس خانه خالی (همیشه گوشه پایین-راست)
+          this.tiles = [];               // چیدمان فعلی
+          this.moves = 0;                // تعداد حرکات
+          this.timerSeconds = 0;         // زمان سپری شده
+          this.timerInterval = null;     // اینتروال تایمر
+          this.gameActive = false;       // بازی فعال؟
+          this.gameFinished = false;     // بازی تمام شده؟
+          this.currentImage = '';        // مسیر تصویر فعلی
+
+          // DOM elements
           this.grid = document.getElementById('puzzleGrid');
           this.timerEl = document.getElementById('puzTimer');
           this.movesEl = document.getElementById('puzMoves');
@@ -1145,110 +1311,83 @@
 
         /** توقف تایمر */
         stopTimer() {
-          if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
         }
 
-        /** رندر کردن گرید پازل */
+        /**
+         * رندر کردن گرید پازل
+         * ابعاد بر اساس this.size
+         */
         renderGrid() {
-          this.grid.innerHTML = ''; this.cells = [];
-          for (let pos = 0; pos < this.tiles.length; pos++) {
+          this.grid.innerHTML = '';
+          this.grid.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
+          this.grid.style.gridTemplateRows = `repeat(${this.size}, 1fr)`;
+
+          const total = this.size * this.size;
+          for (let pos = 0; pos < total; pos++) {
             const cell = document.createElement('div');
             cell.className = 'puzzle-cell';
             cell.dataset.pos = pos;
+
             const tileIndex = this.tiles[pos];
-            if (tileIndex === this.EMPTY) {
+            if (tileIndex === this.emptyIndex) {
               cell.classList.add('empty');
             } else {
-              const row = Math.floor(tileIndex / this.SIZE), col = tileIndex % this.SIZE;
+              const row = Math.floor(tileIndex / this.size);
+              const col = tileIndex % this.size;
               cell.style.backgroundImage = `url(${this.currentImage})`;
-              cell.style.backgroundSize = '300% 300%';
-              cell.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+              cell.style.backgroundSize = `${this.size * 100}%`;
+              cell.style.backgroundPosition = `${col * (100 / (this.size - 1))}% ${row * (100 / (this.size - 1))}%`;
               cell.addEventListener('click', () => this.handleCellClick(cell));
             }
             this.grid.appendChild(cell);
-            this.cells.push(cell);
           }
         }
 
         /** یافتن ایندکس خانه خالی */
-        findEmptyPos() {
-          return this.tiles.indexOf(this.EMPTY);
+        findEmpty() {
+          return this.tiles.indexOf(this.emptyIndex);
         }
 
-        /** بررسی مجاورت دو خانه */
-        isAdjacent(pos1, pos2) {
-          const r1 = Math.floor(pos1 / this.SIZE), c1 = pos1 % this.SIZE;
-          const r2 = Math.floor(pos2 / this.SIZE), c2 = pos2 % this.SIZE;
+        /**
+         * بررسی مجاورت دو خانه (فاصله منهتنی = ۱)
+         * @param {number} p1 - ایندکس اول
+         * @param {number} p2 - ایندکس دوم
+         * @returns {boolean}
+         */
+        isAdjacent(p1, p2) {
+          const r1 = Math.floor(p1 / this.size), c1 = p1 % this.size;
+          const r2 = Math.floor(p2 / this.size), c2 = p2 % this.size;
           return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
         }
 
-        /** مدیریت کلیک روی یک سلول */
+        /**
+         * مدیریت کلیک روی سلول (بدون انیمیشن)
+         * @param {HTMLElement} cell
+         */
         handleCellClick(cell) {
           if (!this.gameActive || this.gameFinished) return;
           const clickedPos = parseInt(cell.dataset.pos);
-          const emptyPos = this.findEmptyPos();
+          const emptyPos = this.findEmpty();
           if (!this.isAdjacent(clickedPos, emptyPos)) return;
 
-          soundSlide();
+          sfxSlide();
 
-          // محاسبه جابجایی: قطعه کلیک‌شده باید به سمت خالی برود.
-          const emptyCell = this.cells[emptyPos];
-          const cellWidth = cell.offsetWidth;
-          const cellHeight = cell.offsetHeight;
-          // delta = موقعیت خالی - موقعیت قطعه
-          const deltaX = (emptyPos % 3 - clickedPos % 3) * cellWidth;
-          const deltaY = (Math.floor(emptyPos / 3) - Math.floor(clickedPos / 3)) * cellHeight;
+          // جابجایی مستقیم داده‌ها
+          [this.tiles[clickedPos], this.tiles[emptyPos]] = [this.tiles[emptyPos], this.tiles[clickedPos]];
+          this.moves++;
+          this.updateStats();
+          this.startTimer();
 
-          // اعمال انیمیشن حرکت
-          cell.style.transition = 'transform 0.28s cubic-bezier(0.25, 0.1, 0.25, 1)';
-          cell.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-          cell.style.zIndex = '2';
+          // رندر مجدد گرید
+          this.renderGrid();
 
-          const onTransitionEnd = () => {
-            cell.removeEventListener('transitionend', onTransitionEnd);
-            // بازنشانی استایل
-            cell.style.transition = '';
-            cell.style.transform = '';
-            cell.style.zIndex = '';
-
-            // جابجایی در آرایه داده
-            [this.tiles[clickedPos], this.tiles[emptyPos]] = [this.tiles[emptyPos], this.tiles[clickedPos]];
-            this.moves++;
-            this.updateStats();
-            if (!this.timerInterval) this.startTimer();
-
-            // به‌روزرسانی ظاهر دو سلول
-            this.updateCellAppearance(clickedPos);
-            this.updateCellAppearance(emptyPos);
-
-            if (this.checkWin()) this.endGame();
-          };
-
-          cell.addEventListener('transitionend', onTransitionEnd);
-        }
-
-        /** به‌روزرسانی ظاهر یک سلول بر اساس داده جاری */
-        updateCellAppearance(pos) {
-          const cell = this.cells[pos];
-          const tileIndex = this.tiles[pos];
-          // حذف event listener قبلی با clone (ساده و بدون نشتی)
-          const newCell = cell.cloneNode(true);
-          cell.parentNode.replaceChild(newCell, cell);
-          this.cells[pos] = newCell;
-
-          if (tileIndex === this.EMPTY) {
-            newCell.classList.add('empty');
-            newCell.style.backgroundImage = '';
-            newCell.style.backgroundSize = '';
-            newCell.style.backgroundPosition = '';
-            // بدون event listener
-          } else {
-            newCell.classList.remove('empty');
-            const row = Math.floor(tileIndex / this.SIZE), col = tileIndex % this.SIZE;
-            newCell.style.backgroundImage = `url(${this.currentImage})`;
-            newCell.style.backgroundSize = '300% 300%';
-            newCell.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
-            newCell.addEventListener('click', () => this.handleCellClick(newCell));
+          // بررسی برد
+          if (this.checkWin()) {
+            this.endGame();
           }
         }
 
@@ -1260,40 +1399,64 @@
           return true;
         }
 
-        /** درهم‌ریزی اولیه با حرکات معتبر */
+        /** درهم‌ریزی اولیه با حرکات معتبر (تضمین حل‌پذیری) */
         shuffle() {
-          this.tiles = [0,1,2,3,4,5,6,7,8];
-          for (let i = 0; i < 120; i++) {
-            const emptyPos = this.findEmptyPos();
-            const moves = [];
-            const r = Math.floor(emptyPos / 3), c = emptyPos % 3;
-            if (r > 0) moves.push(emptyPos - 3);
-            if (r < 2) moves.push(emptyPos + 3);
-            if (c > 0) moves.push(emptyPos - 1);
-            if (c < 2) moves.push(emptyPos + 1);
-            const target = moves[Math.floor(Math.random() * moves.length)];
+          // حالت حل شده
+          this.tiles = Array.from({ length: this.size * this.size }, (_, i) => i);
+          this.emptyIndex = this.size * this.size - 1;
+
+          // تعداد حرکات تصادفی
+          const shuffleMoves = this.size * 40;
+          for (let i = 0; i < shuffleMoves; i++) {
+            const emptyPos = this.findEmpty();
+            const possibleMoves = [];
+            const r = Math.floor(emptyPos / this.size);
+            const c = emptyPos % this.size;
+
+            if (r > 0) possibleMoves.push(emptyPos - this.size);
+            if (r < this.size - 1) possibleMoves.push(emptyPos + this.size);
+            if (c > 0) possibleMoves.push(emptyPos - 1);
+            if (c < this.size - 1) possibleMoves.push(emptyPos + 1);
+
+            const target = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             [this.tiles[emptyPos], this.tiles[target]] = [this.tiles[target], this.tiles[emptyPos]];
           }
         }
 
-        /** راه‌اندازی بازی جدید */
-        init() {
-          this.stopTimer(); this.timerSeconds = 0; this.moves = 0;
-          this.gameActive = true; this.gameFinished = false; this.updateStats();
+        /**
+         * راه‌اندازی بازی جدید
+         * @param {number} size - ابعاد (۳، ۴ یا ۵)
+         */
+        init(size) {
+          this.size = size;
+          this.emptyIndex = size * size - 1;
+          this.stopTimer();
+          this.timerSeconds = 0;
+          this.moves = 0;
+          this.gameActive = true;
+          this.gameFinished = false;
+          this.updateStats();
+
           const randomAct = allActivities[Math.floor(Math.random() * allActivities.length)];
           this.currentImage = 'source/' + randomAct.img;
           previewImage.src = this.currentImage;
-          this.shuffle(); this.renderGrid();
+
+          this.shuffle();
+          this.renderGrid();
           this.hidePreview();
         }
 
         /** پایان بازی */
         endGame() {
-          this.gameActive = false; this.gameFinished = true; this.stopTimer();
-          const bestTime = getBestScore('puzzleBestTime');
+          this.gameActive = false;
+          this.gameFinished = true;
+          this.stopTimer();
+
+          const recordKey = `puzBest_${this.size}`;
+          const bestTime = getBestScore(recordKey);
           let isNewBest = false;
           if (bestTime === 0 || this.timerSeconds < bestTime) {
-            setBestScore('puzzleBestTime', this.timerSeconds);
+            setBestScore(recordKey, this.timerSeconds);
             isNewBest = true;
           }
           const displayBest = isNewBest ? this.timerSeconds : bestTime;
@@ -1305,7 +1468,9 @@
               <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
               <span>🔄 حرکات: <strong>${this.moves.toLocaleString('fa-IR')}</strong></span>
             </div>
-            <div class="record-badge">${isNewBest ? '🎉 رکورد جدید!' : `🏅 بهترین زمان: ${formatTime(displayBest)}`}</div>
+            <div class="record-badge">
+              ${isNewBest ? '🎉 رکورد جدید!' : `🏅 بهترین زمان: ${formatTime(displayBest)}`}
+            </div>
             <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="join-link">📝 به ما بپیوندید</a>
             <div class="promo-section">
               <div class="promo-title">📢 با هیئت زوارالزهرا بیشتر آشنا شوید</div>
@@ -1317,10 +1482,13 @@
             <button class="btn-replay" id="btnPuzzleReplay">🔄 بازی دوباره</button>
           `;
 
-          endOverlay.classList.add('active'); soundWin(); spawnConfetti(100);
+          endOverlay.classList.add('active');
+          sfxWin();
+          spawnConfetti(100);
+
           document.getElementById('btnPuzzleReplay').addEventListener('click', () => {
             endOverlay.classList.remove('active');
-            this.init();
+            this.init(this.size);
           });
         }
 
@@ -1329,6 +1497,7 @@
           previewOverlay.classList.add('active');
           this.previewVisible = true;
         }
+
         hidePreview() {
           previewOverlay.classList.remove('active');
           this.previewVisible = false;
@@ -1336,8 +1505,12 @@
 
         /** تنظیم رویدادهای دکمه پیش‌نمایش (hover و long-press) */
         setupPreviewButton() {
-          puzzlePreviewBtn.addEventListener('mouseenter', () => { if (!this._isPointerDown) this.showPreview(); });
-          puzzlePreviewBtn.addEventListener('mouseleave', () => { if (!this._isPointerDown) this.hidePreview(); });
+          puzzlePreviewBtn.addEventListener('mouseenter', () => {
+            if (!this._isPointerDown) this.showPreview();
+          });
+          puzzlePreviewBtn.addEventListener('mouseleave', () => {
+            if (!this._isPointerDown) this.hidePreview();
+          });
 
           const startLongPress = (e) => {
             e.preventDefault();
@@ -1346,7 +1519,10 @@
           };
           const cancelLongPress = () => {
             this._isPointerDown = false;
-            if (this._longPressTimer) { clearTimeout(this._longPressTimer); this._longPressTimer = null; }
+            if (this._longPressTimer) {
+              clearTimeout(this._longPressTimer);
+              this._longPressTimer = null;
+            }
             if (this.previewVisible) this.hidePreview();
           };
 
@@ -1362,70 +1538,94 @@
       }
 
       // ==============================================================
-      // Initialize Games (ایجاد نمونه‌ها)
+      // Initialize Games (ایجاد نمونه‌های بازی)
       // ==============================================================
       const memoryGame = new MemoryGame();
       const puzzleGame = new PuzzleGame();
       puzzleGame.setupPreviewButton();
 
       // ==============================================================
-      // Available Pair Options (گزینه‌های تعداد کارت)
+      // Populate Selectors (پر کردن دکمه‌های انتخاب)
       // ==============================================================
-      function getAvailablePairOptions() {
-        const deviceType = DeviceDetector.getDeviceType();
-        if (deviceType === 'desktop' || deviceType === 'tablet') {
-          return [
-            { pairs: 4, label: '۴ جفت (۸ کارت)', cssClass: '' },
-            { pairs: 6, label: '۶ جفت (۱۲ کارت)', cssClass: '' },
-            { pairs: 12, label: '۱۲ جفت (۲۴ کارت)', cssClass: 'recommended' }
-          ];
-        } else {
-          return [
-            { pairs: 4, label: '۴ جفت (۸ کارت)', cssClass: '' },
-            { pairs: 6, label: '۶ جفت (۱۲ کارت)', cssClass: '' }
-          ];
-        }
-      }
 
-      /** پر کردن دکمه‌های انتخاب تعداد کارت */
-      function populateSelectorButtons() {
-        selectorBtnsContainer.innerHTML = '';
-        const options = getAvailablePairOptions();
+      /** پر کردن دکمه‌های انتخاب تعداد کارت حافظه */
+      function populateMemorySelectors() {
+        memorySelectBtns.innerHTML = '';
+        // همه گزینه‌ها برای تمام دستگاه‌ها
+        const options = [
+          { pairs: 4, label: '۴ جفت (۸ کارت)' },
+          { pairs: 6, label: '۶ جفت (۱۲ کارت)' },
+          { pairs: 8, label: '۸ جفت (۱۶ کارت)' },
+          { pairs: 10, label: '۱۰ جفت (۲۰ کارت)' },
+          { pairs: 12, label: '۱۲ جفت (۲۴ کارت)' }
+        ];
         options.forEach(opt => {
           const btn = document.createElement('button');
-          btn.className = 'selector-btn ' + (opt.cssClass || '');
-          btn.dataset.pairs = opt.pairs;
+          btn.className = 'selector-btn';
           btn.textContent = opt.label;
-          btn.addEventListener('click', (e) => {
-            const pairs = parseInt(e.target.dataset.pairs);
+          btn.addEventListener('click', () => {
             showScreen('memory');
-            memoryGame.init(pairs);
+            memoryGame.init(opt.pairs);
           });
-          selectorBtnsContainer.appendChild(btn);
+          memorySelectBtns.appendChild(btn);
+        });
+      }
+
+      /** پر کردن دکمه‌های انتخاب ابعاد پازل */
+      function populatePuzzleSelectors() {
+        puzzleSelectBtns.innerHTML = '';
+        [3, 4, 5].forEach(size => {
+          const btn = document.createElement('button');
+          btn.className = 'selector-btn';
+          btn.textContent = `${size}×${size}`;
+          btn.addEventListener('click', () => {
+            showScreen('puzzle');
+            puzzleGame.init(size);
+          });
+          puzzleSelectBtns.appendChild(btn);
         });
       }
 
       // ==============================================================
       // Event Listeners (رویدادهای اصلی)
       // ==============================================================
-      btnGoMemory.addEventListener('click', () => { initAudioContext(); populateSelectorButtons(); showScreen('memorySelect'); });
-      btnGoPuzzle.addEventListener('click', () => { initAudioContext(); showScreen('puzzle'); puzzleGame.init(); });
+      btnGoMemory.addEventListener('click', () => {
+        initAudioContext();
+        populateMemorySelectors();
+        showScreen('memorySelect');
+      });
+
+      btnGoPuzzle.addEventListener('click', () => {
+        initAudioContext();
+        populatePuzzleSelectors();
+        showScreen('puzzleSelect');
+      });
+
       btnMemorySelectBack.addEventListener('click', () => showScreen('home'));
+      btnPuzzleSelectBack.addEventListener('click', () => showScreen('home'));
       btnMemoryBack.addEventListener('click', () => { memoryGame.destroy(); showScreen('home'); });
       btnPuzzleBack.addEventListener('click', () => { puzzleGame.stopTimer(); showScreen('home'); });
 
       // بستن مدال با کلیک روی پس‌زمینه
-      endOverlay.addEventListener('click', (e) => { if (e.target === endOverlay) endOverlay.classList.remove('active'); });
+      endOverlay.addEventListener('click', (e) => {
+        if (e.target === endOverlay) endOverlay.classList.remove('active');
+      });
 
       // فعال‌سازی AudioContext با اولین تعامل کاربر
       document.body.addEventListener('click', initAudioContext, { once: true });
       document.body.addEventListener('touchstart', initAudioContext, { once: true });
 
       // ==============================================================
-      // Orientation Change Handler
+      // Orientation Change Handler (برای به‌روزرسانی احتمالی)
       // ==============================================================
       function handleOrientationChange() {
-        if (!screens.memorySelect.classList.contains('hidden')) populateSelectorButtons();
+        // اگر در صفحه انتخاب حافظه هستیم، دکمه‌ها را دوباره پر کنیم (اختیاری)
+        if (!screens.memorySelect.classList.contains('hidden')) {
+          populateMemorySelectors();
+        }
+        if (!screens.puzzleSelect.classList.contains('hidden')) {
+          populatePuzzleSelectors();
+        }
       }
       if (window.matchMedia) {
         const mqPortrait = window.matchMedia('(orientation: portrait)');
@@ -1441,7 +1641,7 @@
         showScreen('home');
         updateMusicButton();
         startMusic();
-        console.log('[App] Version 8.0 - Device:', DeviceDetector.getDeviceType(), '| Orientation:', DeviceDetector.getOrientation());
+        console.log('[App] نسخه 10.0 - دستگاه:', DeviceDetector.getDeviceType(), '| جهت:', DeviceDetector.getOrientation());
       }
 
       initializeApp();
