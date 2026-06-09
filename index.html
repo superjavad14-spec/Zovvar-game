@@ -3,30 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>بازی حافظه | هیئت زوارالزهرا</title>
+  <title>هیئت زوارالزهرا | مجموعه بازی‌ها</title>
+  <!-- 
+    ============================================================
+    پروژه: مجموعه بازی‌های حافظه و پازل هیئت زوارالزهرا
+    نسخه: 3.0
+    تاریخ: 2026-06-09
+    توضیح: یک فایل HTML مستقل، واکنش‌گرا، بدون کتابخانه خارجی
+    شامل صفحه خانه، بازی حافظه با طرح پشت کارت اسلیمی CSS،
+    و بازی پازل 3x3 (تصویر به هم ریخته)
+    ============================================================
+  -->
   <style>
-    /* ========== CSS Custom Properties ========== */
+    /* ==================== CSS Custom Properties (متغیرهای ریشه) ==================== */
     :root {
-      --green-dark: #0a2e18;
-      --green-mid: #1a4a2a;
-      --green-light: #2a6b3a;
-      --gold: #c9a84c;
-      --gold-light: #e0c878;
-      --gold-pale: #f7efd2;
+      --font-main: 'Yekan', 'Vazirmatn', 'Tahoma', sans-serif;
       --bg-body: #faf7f0;
       --surface: #ffffff;
       --text-dark: #2c2416;
       --text-soft: #5c4a2e;
-      --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-md: 0 8px 28px rgba(0,0,0,0.14);
-      --shadow-gold: 0 0 18px rgba(201,168,76,0.5);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.14);
+      --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.6);
       --radius-card: 16px;
       --radius-btn: 50px;
       --transition-flip: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      --font-main: 'Yekan', 'Vazirmatn', 'Tahoma', sans-serif;
+      --gold-dark: #8b6508;
+      --gold: #d4af37;
+      --gold-light: #f9e076;
+      --maroon: #3d1c1c;
+      --teal: #1e4a4a;
     }
 
-    /* ========== Font Face (Yekan embedded as base64 – placeholder for full offline) ========== */
+    /* ==================== Font Face (نمونه فونت آفلاین - base64 واقعی اینجا قرار می‌گیرد) ==================== */
     @font-face {
       font-family: 'Yekan';
       src: url('data:font/truetype;base64,AAEAAAASAQAABAAgR0RFRgA...') format('truetype');
@@ -34,20 +43,23 @@
       font-style: normal;
       font-display: swap;
     }
-    /* In production, replace the above data URL with the full base64 of Yekan.ttf */
+    /* Fallback fonts */
     @font-face {
       font-family: 'YekanFallback';
       src: local('Tahoma');
       font-display: swap;
     }
 
-    /* ========== Global Reset & Base ========== */
-    * {
+    /* ==================== Reset کلی ==================== */
+    *,
+    *::before,
+    *::after {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
+    /* ==================== استایل پایه Body ==================== */
     body {
       font-family: var(--font-main), 'YekanFallback', sans-serif;
       background: linear-gradient(145deg, #faf7f0 0%, #f5edd8 50%, #faf7f0 100%);
@@ -61,120 +73,123 @@
       -webkit-tap-highlight-color: transparent;
       overflow-x: hidden;
       position: relative;
+      color: var(--text-dark);
     }
 
-    /* Subtle static background pattern – no animation to prevent layout shake */
+    /* الگوی نقطه‌ای پس‌زمینه ثابت */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle at 20% 30%, rgba(26,74,42,0.03) 1px, transparent 1px),
-                        radial-gradient(circle at 80% 70%, rgba(201,168,76,0.04) 1.5px, transparent 1.5px);
+      background-image: radial-gradient(circle at 20% 30%, rgba(30, 74, 74, 0.03) 1px, transparent 1px),
+                        radial-gradient(circle at 80% 70%, rgba(139, 101, 8, 0.04) 1.5px, transparent 1.5px);
       background-size: 60px 60px, 90px 90px;
       pointer-events: none;
       z-index: 0;
     }
 
-    /* ========== Start Screen ========== */
-    .start-screen {
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 46, 24, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      transition: opacity 0.5s ease, visibility 0.5s;
-      opacity: 1;
-      visibility: visible;
-    }
-    .start-screen.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .start-card {
-      background: var(--surface);
-      border-radius: 28px;
-      padding: 36px 24px;
-      max-width: 420px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-      border: 2px solid var(--gold);
-      animation: fadeIn 0.5s ease both;
-      position: relative;
-      overflow: hidden;
-    }
-    @keyframes fadeIn {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-    /* Decorative shine on start card */
-    .start-card::before {
-      content: "";
-      position: absolute;
-      top: -40%;
-      left: -40%;
-      width: 180%;
-      height: 180%;
-      background: radial-gradient(circle at 30% 30%, rgba(201,168,76,0.08), transparent 60%);
-      pointer-events: none;
-    }
-    .game-title {
-      font-size: 2.5rem;
-      font-weight: 900;
-      color: var(--green-dark);
-      margin-bottom: 12px;
-      line-height: 1.3;
-      position: relative;
-    }
-    .subtitle {
-      font-size: 1.1rem;
-      color: var(--text-soft);
-      margin-bottom: 28px;
-      font-weight: 500;
-      line-height: 1.7;
-    }
-    .btn-start {
-      background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
-      color: white;
-      border: none;
-      padding: 16px 48px;
-      border-radius: var(--radius-btn);
-      font-family: inherit;
-      font-size: 1.3rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 10px 24px rgba(10,46,24,0.45);
-      transition: background 0.3s, box-shadow 0.3s;
-      border: 2px solid var(--gold);
-      letter-spacing: 1px;
-    }
-    .btn-start:hover {
-      background: linear-gradient(135deg, #1f5a36, #0f3b20);
-      box-shadow: 0 14px 32px rgba(10,46,24,0.6);
-    }
-
-    /* ========== Header & Stats ========== */
-    .game-header {
+    /* ==================== صفحه خانه (Home Screen) ==================== */
+    .screen {
       position: relative;
       z-index: 2;
       width: 100%;
       max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .screen.hidden {
+      display: none;
+    }
+
+    #homeScreen {
+      justify-content: center;
+      min-height: 90vh;
+    }
+
+    .home-title {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--maroon);
+      text-shadow: 2px 2px 0px var(--gold-light);
+      margin-bottom: 8px;
       text-align: center;
-      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .home-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-soft);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--maroon), #2c1010);
+      color: white;
+      border: 2px solid var(--gold);
+      padding: 18px 32px;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(61, 28, 28, 0.35);
+      transition: all 0.3s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: rotate(45deg);
+      animation: btnShine 4s infinite;
+    }
+    @keyframes btnShine {
+      0% { transform: translateX(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) rotate(45deg); }
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, #5a2a2a, #3d1c1c);
+      box-shadow: 0 14px 32px rgba(61, 28, 28, 0.5);
+      transform: translateY(-2px);
+    }
+    .btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 5px 12px rgba(61, 28, 28, 0.4);
+    }
+
+    /* ==================== هدر مشترک بازی‌ها ==================== */
+    .game-header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 8px;
     }
     .org-name {
       font-size: 1.6rem;
       font-weight: 900;
-      color: var(--green-dark);
+      color: var(--maroon);
       display: inline-block;
       background: var(--surface);
-      padding: 8px 24px;
+      padding: 8px 28px;
       border-radius: 40px;
       box-shadow: var(--shadow-sm);
-      border: 1px solid var(--gold-pale);
+      border: 1px solid var(--gold-light);
     }
     .stats-bar {
       display: flex;
@@ -182,13 +197,11 @@
       gap: 12px;
       justify-content: center;
       margin: 16px 0;
-      z-index: 2;
-      position: relative;
     }
     .stat-item {
       background: var(--surface);
       border-radius: 14px;
-      padding: 10px 16px;
+      padding: 10px 18px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -200,30 +213,26 @@
     }
     .stat-value {
       font-weight: 900;
-      color: var(--green-dark);
+      color: var(--maroon);
       min-width: 28px;
       text-align: center;
     }
 
-    /* ========== Game Grid ========== */
-    .game-grid {
-      position: relative;
-      z-index: 2;
+    /* ==================== بازی حافظه (Memory Game) ==================== */
+    .memory-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      max-width: 680px;
       width: 100%;
       justify-items: center;
       margin: 8px 0 24px;
     }
     @media (max-width: 580px) {
-      .game-grid {
+      .memory-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
       }
     }
-
     .card-container {
       perspective: 1200px;
       width: 100%;
@@ -231,18 +240,18 @@
       aspect-ratio: 4 / 5;
       cursor: pointer;
       position: relative;
-      animation: cardFadeIn 0.4s ease both;
+      animation: fadeInCard 0.5s ease both;
       will-change: transform;
     }
-    @keyframes cardFadeIn {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
+    @keyframes fadeInCard {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
     }
-    .card-container.no-pointer {
+    .card-container.no-click {
       pointer-events: none;
     }
     .card-container.matched {
-      box-shadow: 0 0 14px rgba(46,204,113,0.55);
+      filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.7));
       border-radius: var(--radius-card);
     }
 
@@ -271,27 +280,33 @@
       justify-content: center;
     }
 
-    /* ========== Card Back Design (SVG Iran Map + Arabesque) ========== */
+    /* ==================== طرح پشت کارت اسلیمی با CSS محض ==================== */
     .card-back {
-      background: var(--green-dark);
-      border: 3px solid var(--green-light);
+      background-color: var(--maroon);
+      background-image: 
+        /* لایه اول: الگوی شعاعی طلایی */
+        radial-gradient(circle at 25% 30%, var(--gold) 3px, transparent 3px),
+        radial-gradient(circle at 75% 70%, var(--gold) 3px, transparent 3px),
+        /* لایه دوم: الگوی مخروطی چرخان (اسلیمی) */
+        repeating-conic-gradient(var(--gold-dark) 0% 4%, var(--maroon) 4% 8%, var(--gold) 8% 12%) 50% / 40px 40px,
+        /* لایه سوم: گرادیان خطی برای عمق */
+        linear-gradient(145deg, rgba(0,0,0,0.3) 0%, transparent 50%);
+      border: 4px solid var(--gold);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(212, 175, 55, 0.5);
       z-index: 2;
     }
-    .card-back svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    /* Light shine effect – no movement, just static gradient */
-    .card-back::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%);
-      pointer-events: none;
+    /* انیمیشن hover برای پشت کارت */
+    .card-container:hover .card-back {
+      background-image: 
+        radial-gradient(circle at 30% 25%, var(--gold-light) 4px, transparent 4px),
+        radial-gradient(circle at 70% 75%, var(--gold-light) 4px, transparent 4px),
+        repeating-conic-gradient(var(--gold-dark) 0% 4%, var(--maroon) 4% 8%, var(--gold) 8% 12%) 50% / 40px 40px,
+        linear-gradient(145deg, rgba(0,0,0,0.2) 0%, transparent 50%);
+      box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(249, 224, 118, 0.8);
+      transition: all 0.3s ease;
     }
 
-    /* ========== Card Front ========== */
+    /* ==================== روی کارت (حافظه) ==================== */
     .card-front {
       background: linear-gradient(160deg, #fffefb, #fdf8ed);
       border: 3px solid #e8dbb8;
@@ -320,7 +335,7 @@
     .card-title {
       font-size: 0.95rem;
       font-weight: 800;
-      color: var(--green-dark);
+      color: var(--maroon);
       margin-top: 4px;
       line-height: 1.4;
     }
@@ -331,39 +346,71 @@
       margin-bottom: 2px;
     }
 
-    /* ========== Buttons ========== */
-    .btn-row {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: center;
-      z-index: 3;
-      position: relative;
-      margin-top: 8px;
+    /* ==================== بازی پازل (Sliding Puzzle) ==================== */
+    .puzzle-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+      max-width: 350px;
+      aspect-ratio: 1 / 1;
+      margin: 8px auto;
+      background: var(--maroon);
+      padding: 6px;
+      border-radius: 12px;
+      border: 3px solid var(--gold);
+      box-shadow: var(--shadow-md);
     }
-    .btn-reset, .btn-list {
+    .puzzle-piece {
+      background-size: 300% 300%;
+      background-repeat: no-repeat;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .puzzle-piece.empty {
+      background: rgba(255,255,255,0.1);
+      border: 2px dashed var(--gold-light);
+      box-shadow: none;
+      cursor: default;
+    }
+    .puzzle-piece:not(.empty):hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+      transform: scale(1.02);
+    }
+    .puzzle-piece:active {
+      transform: scale(0.96);
+    }
+
+    /* ==================== دکمه‌های کنترل ==================== */
+    .btn-control {
       background: var(--surface);
       border: 2px solid var(--gold);
-      color: var(--green-dark);
+      color: var(--maroon);
       font-family: inherit;
       font-weight: 700;
       font-size: 1rem;
-      padding: 12px 24px;
+      padding: 12px 28px;
       border-radius: var(--radius-btn);
       cursor: pointer;
       box-shadow: var(--shadow-sm);
       transition: background 0.3s, border-color 0.3s;
+      margin-top: 8px;
     }
-    .btn-reset:hover, .btn-list:hover {
-      background: var(--gold-pale);
-      border-color: var(--green-dark);
+    .btn-control:hover {
+      background: #fdf8f0;
+      border-color: var(--maroon);
     }
 
-    /* ========== End Overlay ========== */
-    .end-overlay {
+    /* ==================== پایان بازی (Modal) ==================== */
+    .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0, 0, 0, 0.75);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -372,99 +419,70 @@
       visibility: hidden;
       transition: opacity 0.5s, visibility 0.5s;
     }
-    .end-overlay.active {
+    .overlay.active {
       opacity: 1;
       visibility: visible;
     }
-    .end-modal {
+    .modal {
       background: #fffefb;
       border-radius: 28px;
-      padding: 28px 20px;
+      padding: 28px 24px;
       width: 92%;
       max-width: 480px;
       text-align: center;
-      box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
       border: 3px solid var(--gold);
-      animation: fadeIn 0.4s ease;
+      animation: modalPopIn 0.4s ease;
     }
-    .end-score {
-      font-size: 3.2rem;
+    @keyframes modalPopIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .modal h2 {
+      color: var(--maroon);
+      margin-bottom: 12px;
+    }
+    .modal .big-text {
+      font-size: 2.5rem;
       font-weight: 900;
-      color: var(--gold);
+      color: var(--gold-dark);
       margin: 8px 0;
     }
-    .end-detail {
-      font-size: 0.85rem;
-      color: var(--text-soft);
-      margin: 6px 0;
+    .modal .detail-row {
       display: flex;
       justify-content: center;
-      gap: 18px;
-      flex-wrap: wrap;
-    }
-    .best-record {
-      background: var(--gold-pale);
-      border-radius: 20px;
-      padding: 6px 18px;
-      font-weight: 700;
-      color: var(--green-dark);
-      display: inline-block;
-      margin: 10px 0;
+      gap: 20px;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      margin: 12px 0;
     }
     .promo-section {
-      margin: 24px 0 12px;
-    }
-    .promo-title {
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--green-dark);
-      margin-bottom: 14px;
+      margin: 20px 0 10px;
     }
     .promo-links {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-top: 10px;
     }
-    .promo-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 28px;
+    .promo-link {
+      background: linear-gradient(135deg, var(--maroon), #2c1010);
+      color: white;
+      text-decoration: none;
+      padding: 12px 24px;
       border-radius: 40px;
       font-weight: 700;
-      font-size: 1.05rem;
-      text-decoration: none;
-      color: white;
-      background: linear-gradient(135deg, #1a4a2a, #0a2e18);
       border: 2px solid var(--gold);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-      transition: background 0.3s, box-shadow 0.3s;
-      position: relative;
-      overflow: hidden;
+      transition: 0.3s;
     }
-    .promo-btn::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.25), transparent);
-      transform: rotate(45deg);
-      animation: btnShine 4s infinite;
-    }
-    @keyframes btnShine {
-      0% { transform: translateX(-100%) rotate(45deg); }
-      100% { transform: translateX(100%) rotate(45deg); }
-    }
-    .promo-btn:hover {
-      background: linear-gradient(135deg, #1f5a36, #0f3b20);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+    .promo-link:hover {
+      background: #5a2a2a;
+      box-shadow: var(--shadow-gold);
     }
     .btn-replay {
       background: var(--gold);
-      color: #0a2e18;
+      color: var(--maroon);
       border: none;
       padding: 12px 32px;
       border-radius: 40px;
@@ -473,104 +491,13 @@
       font-size: 1rem;
       cursor: pointer;
       margin-top: 16px;
-      transition: background 0.3s, box-shadow 0.3s;
+      transition: background 0.3s;
     }
     .btn-replay:hover {
       background: var(--gold-light);
-      box-shadow: var(--shadow-gold);
     }
 
-    /* ========== Activities List Overlay ========== */
-    .list-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 300;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.4s, visibility 0.4s;
-    }
-    .list-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-    .list-modal {
-      background: #fffefb;
-      border-radius: 24px;
-      padding: 24px;
-      width: 92%;
-      max-width: 600px;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-      border: 3px solid var(--gold);
-      animation: fadeIn 0.3s ease;
-    }
-    .list-modal h3 {
-      text-align: center;
-      color: var(--green-dark);
-      font-size: 1.3rem;
-      margin-bottom: 20px;
-    }
-    .activity-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 14px;
-    }
-    .activity-card {
-      background: #fdf8f0;
-      border-radius: 14px;
-      padding: 8px;
-      text-align: center;
-      border: 2px solid #e8dbb8;
-      transition: box-shadow 0.2s;
-    }
-    .activity-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    }
-    .activity-card img {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 6px;
-      border: 1px solid #dac89c;
-    }
-    .activity-card .act-name {
-      font-weight: 700;
-      color: var(--green-dark);
-      font-size: 0.85rem;
-      margin-bottom: 6px;
-    }
-    .activity-card .desc-placeholder {
-      font-size: 0.7rem;
-      color: #8a7a5a;
-      border: 1px dashed #c9a84c;
-      border-radius: 8px;
-      padding: 6px 4px;
-      background: #fffef9;
-    }
-    .btn-close-list {
-      display: block;
-      margin: 20px auto 0;
-      background: var(--green-dark);
-      color: white;
-      border: none;
-      padding: 10px 28px;
-      border-radius: 30px;
-      font-family: inherit;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .btn-close-list:hover {
-      background: #1a4a2a;
-    }
-
-    /* ========== Confetti ========== */
+    /* ==================== ذرات شادی (Confetti) ==================== */
     .confetti-wrap {
       position: fixed;
       inset: 0;
@@ -587,198 +514,130 @@
       100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
     }
 
-    /* ========== Responsive fine-tuning ========== */
+    /* ==================== واکنش‌گرایی (Responsive) ==================== */
     @media (max-width: 400px) {
-      .game-grid { gap: 8px; }
+      .home-title { font-size: 2rem; }
+      .memory-grid { gap: 8px; }
       .card-title { font-size: 0.8rem; }
-      .card-desc { font-size: 0.65rem; }
-      .btn-row { flex-direction: column; align-items: center; }
+      .stats-bar { gap: 8px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ========== START SCREEN ========== -->
-  <div class="start-screen" id="startScreen">
-    <div class="start-card">
-      <div class="game-title">🧠 بازی حافظه</div>
-      <div class="subtitle">
-        ✨ با فعالیت‌های هیئت <strong>زوارالزهرا</strong> آشنا شوید<br>و حافظه خود را به چالش بکشید.
-      </div>
-      <button class="btn-start" id="btnStartGame">▶ شروع بازی</button>
+  <!-- ==================== HTML: صفحه خانه ==================== -->
+  <div id="homeScreen" class="screen">
+    <div class="home-title">✨ خوش آمدید</div>
+    <div class="home-subtitle">هیئت <strong>زوارالزهرا</strong> تقدیم می‌کند<br>بازی مورد علاقه خود را انتخاب کنید</div>
+    <div class="btn-group">
+      <button class="btn" id="btnGoMemory">🧠 بازی حافظه</button>
+      <button class="btn" id="btnGoPuzzle">🧩 تصویر به هم ریخته</button>
     </div>
   </div>
 
-  <!-- ========== MAIN GAME UI ========== -->
-  <div class="game-header">
-    <div class="org-name">🏴 هیئت زوارالزهرا</div>
-  </div>
-
-  <div class="stats-bar" id="statsBar">
-    <div class="stat-item">🎯 تلاش: <span class="stat-value" id="attemptsDisplay">۰</span></div>
-    <div class="stat-item">❌ خطا: <span class="stat-value" id="errorsDisplay">۰</span></div>
-    <div class="stat-item">⏱ زمان: <span class="stat-value" id="timerDisplay">۰:۰۰</span></div>
-    <div class="stat-item">🃏 جفت مانده: <span class="stat-value" id="pairsLeftDisplay">۴</span></div>
-  </div>
-
-  <div class="game-grid" id="gameGrid"></div>
-
-  <div class="btn-row">
-    <button class="btn-reset" id="btnReset">🔄 بازی جدید</button>
-    <button class="btn-list" id="btnShowList">📋 فهرست فعالیت‌ها</button>
-  </div>
-
-  <!-- ========== END OVERLAY ========== -->
-  <div class="end-overlay" id="endOverlay">
-    <div class="end-modal">
-      <div style="font-size:3rem;">🏆</div>
-      <h2 style="color:#0a2e18; margin:8px 0;">آفرین! همه جفت‌ها پیدا شد</h2>
-      <div class="end-score" id="finalScore">۰</div>
-      <div class="end-detail">
-        <span>❌ خطا: <strong id="finalErrors">۰</strong></span>
-        <span>⏱ زمان: <strong id="finalTime">۰:۰۰</strong></span>
-      </div>
-      <div class="best-record" id="bestRecordDisplay">🏅 بهترین رکورد: ---</div>
-
-      <div class="promo-section">
-        <div class="promo-title">📢 با هیئت بیشتر آشنا شوید</div>
-        <div class="promo-links">
-          <a href="https://zovvar.com" target="_blank" rel="noopener" class="promo-btn">🌐 سایت هیئت</a>
-          <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="promo-btn">📱 کانال ایتا</a>
-        </div>
-      </div>
-      <button class="btn-replay" id="btnReplay">🔄 بازی دوباره</button>
+  <!-- ==================== HTML: صفحه بازی حافظه ==================== -->
+  <div id="memoryScreen" class="screen hidden">
+    <div class="game-header">
+      <div class="org-name">🏴 هیئت زوارالزهرا</div>
     </div>
-  </div>
-
-  <!-- ========== ACTIVITIES LIST OVERLAY ========== -->
-  <div class="list-overlay" id="listOverlay">
-    <div class="list-modal">
-      <h3>📋 تمام فعالیت‌های هیئت زوارالزهرا</h3>
-      <div class="activity-grid" id="activityGrid"></div>
-      <button class="btn-close-list" id="btnCloseList">بازگشت</button>
+    <div class="stats-bar">
+      <div class="stat-item">🎯 تلاش: <span class="stat-value" id="memAttempts">۰</span></div>
+      <div class="stat-item">❌ خطا: <span class="stat-value" id="memErrors">۰</span></div>
+      <div class="stat-item">⏱ زمان: <span class="stat-value" id="memTimer">۰:۰۰</span></div>
+      <div class="stat-item">🃏 جفت مانده: <span class="stat-value" id="memPairsLeft">۴</span></div>
     </div>
+    <div id="memoryGrid" class="memory-grid"></div>
+    <button class="btn-control" id="btnMemoryBack">🏠 بازگشت به خانه</button>
   </div>
 
-  <!-- Confetti container -->
-  <div class="confetti-wrap" id="confettiContainer"></div>
+  <!-- ==================== HTML: صفحه بازی پازل ==================== -->
+  <div id="puzzleScreen" class="screen hidden">
+    <div class="game-header">
+      <div class="org-name">🧩 تصویر به هم ریخته</div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-item">⏱ زمان: <span class="stat-value" id="puzTimer">۰:۰۰</span></div>
+      <div class="stat-item">🔄 حرکات: <span class="stat-value" id="puzMoves">۰</span></div>
+    </div>
+    <div id="puzzleGrid" class="puzzle-container"></div>
+    <button class="btn-control" id="btnPuzzleBack">🏠 بازگشت به خانه</button>
+  </div>
 
+  <!-- ==================== HTML: مدال پایان بازی و کانفتی ==================== -->
+  <div id="endOverlay" class="overlay">
+    <div id="endModal" class="modal"></div>
+  </div>
+  <div id="confettiContainer" class="confetti-wrap"></div>
+
+  <!-- ==================== JavaScript: برنامه اصلی ==================== -->
   <script>
     (function() {
-      // ==================== DOM Elements ====================
-      const startScreen = document.getElementById('startScreen');
-      const btnStartGame = document.getElementById('btnStartGame');
-      const gameGrid = document.getElementById('gameGrid');
-      const attemptsDisplay = document.getElementById('attemptsDisplay');
-      const errorsDisplay = document.getElementById('errorsDisplay');
-      const timerDisplay = document.getElementById('timerDisplay');
-      const pairsLeftDisplay = document.getElementById('pairsLeftDisplay');
-      const btnReset = document.getElementById('btnReset');
-      const btnShowList = document.getElementById('btnShowList');
+      // ==================== ارجاعات DOM (DOM References) ====================
+      const screens = {
+        home: document.getElementById('homeScreen'),
+        memory: document.getElementById('memoryScreen'),
+        puzzle: document.getElementById('puzzleScreen')
+      };
+      const btnGoMemory = document.getElementById('btnGoMemory');
+      const btnGoPuzzle = document.getElementById('btnGoPuzzle');
+      const btnMemoryBack = document.getElementById('btnMemoryBack');
+      const btnPuzzleBack = document.getElementById('btnPuzzleBack');
       const endOverlay = document.getElementById('endOverlay');
-      const finalScoreEl = document.getElementById('finalScore');
-      const finalErrorsEl = document.getElementById('finalErrors');
-      const finalTimeEl = document.getElementById('finalTime');
-      const bestRecordDisplay = document.getElementById('bestRecordDisplay');
-      const btnReplay = document.getElementById('btnReplay');
+      const endModal = document.getElementById('endModal');
       const confettiContainer = document.getElementById('confettiContainer');
-      const listOverlay = document.getElementById('listOverlay');
-      const activityGrid = document.getElementById('activityGrid');
-      const btnCloseList = document.getElementById('btnCloseList');
 
-      // ==================== Game Constants & State ====================
-      const PAIRS_PER_GAME = 4;
+      // ==================== داده‌های فعالیت‌ها (Activities Data) ====================
       const allActivities = [
-        { id: 1, title: 'راهپیمایی اربعین', desc: 'پیاده‌روی عظیم اربعین', img: 'arbain.jpg' },
-        { id: 2, title: 'اردوی برهان', desc: 'تقویت بنیه علمی و فرهنگی', img: 'borhan.jpg' },
-        { id: 3, title: 'هیئت هفتگی', desc: 'دورهمی معنوی هفتگی', img: 'haftegi.jpg' },
-        { id: 4, title: 'اعتکاف', desc: 'سه روز عبادت و خودسازی', img: 'itikaf.jpg' },
-        { id: 5, title: 'اردوی مشهد', desc: 'زیارت امام رضا (ع)', img: 'mashhad.jpg' },
-        { id: 6, title: 'محرم و فاطمیه', desc: 'عزاداری سنتی', img: 'moharam.jpg' },
-        { id: 7, title: 'المپیک تابستانی', desc: 'مسابقات ورزشی', img: 'olampyc.jpg' },
-        { id: 8, title: 'شب قدر', desc: 'احیاء و مناجات', img: 'qadr.jpg' },
-        { id: 9, title: 'راهیان نور', desc: 'بازدید مناطق عملیاتی', img: 'rahian.jpg' },
-        { id: 10, title: 'اردوی شمال', desc: 'تفریح و نشاط', img: 'shomal.jpg' },
-        { id: 11, title: 'کلاس سیره و اخلاق', desc: 'آموزه‌های اخلاقی', img: 'sire.jpg' }
+        { id: 1, title: 'راهپیمایی اربعین', desc: 'پیاده‌روی عظیم اربعین', img: 'source/arbain.jpg' },
+        { id: 2, title: 'اردوی برهان', desc: 'تقویت بنیه علمی و فرهنگی', img: 'source/borhan.jpg' },
+        { id: 3, title: 'هیئت هفتگی', desc: 'دورهمی معنوی هفتگی', img: 'source/haftegi.jpg' },
+        { id: 4, title: 'اعتکاف', desc: 'سه روز عبادت و خودسازی', img: 'source/itikaf.jpg' },
+        { id: 5, title: 'اردوی مشهد', desc: 'زیارت امام رضا (ع)', img: 'source/mashhad.jpg' },
+        { id: 6, title: 'محرم و فاطمیه', desc: 'عزاداری سنتی', img: 'source/moharam.jpg' },
+        { id: 7, title: 'المپیک تابستانی', desc: 'مسابقات ورزشی', img: 'source/olampyc.jpg' },
+        { id: 8, title: 'شب قدر', desc: 'احیاء و مناجات', img: 'source/qadr.jpg' },
+        { id: 9, title: 'راهیان نور', desc: 'بازدید مناطق عملیاتی', img: 'source/rahian.jpg' },
+        { id: 10, title: 'اردوی شمال', desc: 'تفریح و نشاط', img: 'source/shomal.jpg' },
+        { id: 11, title: 'کلاس سیره و اخلاق', desc: 'آموزه‌های اخلاقی', img: 'source/sire.jpg' }
       ];
 
-      let cardsData = [];               // Current game cards (8 items)
-      let flippedCards = [];           // Currently flipped card elements
-      let matchedPairs = new Set();    // Set of matched pair IDs
-      let attempts = 0;
-      let errors = 0;
-      let timerSeconds = 0;
-      let timerInterval = null;
-      let isPreviewActive = false;     // During initial card reveal
-      let isChecking = false;         // While two cards are being checked
-      let gameActive = false;
-      let gameFinished = false;
-
-      // Audio context (lazy)
+      // ==================== ابزارهای صوتی (Audio Utilities) ====================
       let audioCtx = null;
-
-      // ==================== Inline SVG for Card Back ====================
-      function generateCardBackSVG() {
-        return `
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <pattern id="islimi" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
-                <path d="M7 0 L9 5 L14 7 L9 9 L7 14 L5 9 L0 7 L5 5 Z" fill="#c9a84c" opacity="0.35"/>
-              </pattern>
-              <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#e0c878"/>
-                <stop offset="100%" stop-color="#c9a84c"/>
-              </linearGradient>
-            </defs>
-            <rect width="160" height="200" fill="#0a2e18" rx="12"/>
-            <rect x="4" y="4" width="152" height="192" fill="none" stroke="url(#islimi)" stroke-width="6" rx="10"/>
-            <rect x="8" y="8" width="144" height="184" fill="none" stroke="url(#goldGrad)" stroke-width="2" rx="8" opacity="0.7"/>
-            <!-- Minimal Iran map path (approximate) -->
-            <g transform="translate(50, 55) scale(0.9)">
-              <path d="M30 5 L38 10 L42 18 L44 28 L40 38 L33 45 L28 42 L24 35 L22 25 L26 14 Z" 
-                    fill="#c9a84c" opacity="0.8" stroke="#e0c878" stroke-width="1.5"/>
-              <circle cx="32" cy="22" r="2" fill="#fff" opacity="0.7"/>
-            </g>
-            <circle cx="40" cy="40" r="2.5" fill="#e0c878" opacity="0.4"/>
-            <circle cx="120" cy="160" r="2" fill="#e0c878" opacity="0.3"/>
-            <path d="M20 20 Q30 18 40 20" fill="none" stroke="#c9a84c" stroke-width="1.8" opacity="0.6"/>
-          </svg>`;
-      }
-
-      // ==================== Audio Helpers ====================
-      function initAudio() {
+      function initAudioContext() {
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
       }
-
-      function playTone(freq, duration, type = 'sine', volume = 0.2, delay = 0) {
+      function playTone(frequency, duration, type = 'sine', volume = 0.2, delay = 0) {
         if (!audioCtx) return;
         try {
-          const t = audioCtx.currentTime + delay;
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = type;
-          osc.frequency.setValueAtTime(freq, t);
-          gain.gain.setValueAtTime(volume, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(t);
-          osc.stop(t + duration);
-        } catch (e) { /* ignore */ }
+          const now = audioCtx.currentTime + delay;
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.type = type;
+          oscillator.frequency.setValueAtTime(frequency, now);
+          gainNode.gain.setValueAtTime(volume, now);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.start(now);
+          oscillator.stop(now + duration);
+        } catch (e) { /* بی‌صدا */ }
       }
+      function soundClick() { initAudioContext(); playTone(700, 0.07); }
+      function soundMatch() { initAudioContext(); playTone(523, 0.1, 'sine', 0.25, 0); playTone(659, 0.1, 'sine', 0.25, 0.1); }
+      function soundError() { initAudioContext(); playTone(180, 0.15, 'triangle', 0.15); }
+      function soundWin() { initAudioContext(); [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.15, 'sine', 0.3, i * 0.1)); }
 
-      function soundClick() { initAudio(); playTone(700, 0.07, 'sine', 0.18); }
-      function soundMatch() { initAudio(); playTone(523, 0.1, 'sine', 0.25, 0); playTone(659, 0.1, 'sine', 0.25, 0.1); playTone(784, 0.12, 'sine', 0.2, 0.2); }
-      function soundError() { initAudio(); playTone(180, 0.15, 'triangle', 0.12); }
-      function soundWin() {
-        initAudio();
-        [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.15, 'sine', 0.3, i * 0.1));
-      }
-
-      // ==================== Utility Functions ====================
+      // ==================== ابزارهای کمکی (Utility Functions) ====================
+      /**
+       * آرایه‌ای را به صورت تصادفی بر می‌زند (Shuffle).
+       * @param {Array} arr - آرایه ورودی
+       * @returns {Array} آرایه بر خورده
+       */
       function shuffleArray(arr) {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
@@ -788,347 +647,556 @@
         return a;
       }
 
+      /**
+       * زمان را به فرمت دیجیتال "دقیقه:ثانیه" قالب‌بندی می‌کند.
+       * @param {number} sec - زمان بر حسب ثانیه
+       * @returns {string} زمان قالب‌بندی شده
+       */
       function formatTime(sec) {
         const m = Math.floor(sec / 60);
         const s = sec % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
       }
 
-      function updateStatsDisplay() {
-        attemptsDisplay.textContent = attempts.toLocaleString('fa-IR');
-        errorsDisplay.textContent = errors.toLocaleString('fa-IR');
-        const left = PAIRS_PER_GAME - matchedPairs.size;
-        pairsLeftDisplay.textContent = left.toLocaleString('fa-IR');
+      /**
+       * امتیاز بهترین رکورد را از localStorage واکشی می‌کند.
+       * @param {string} key - کلید ذخیره‌سازی
+       * @returns {number} بهترین امتیاز
+       */
+      function getBestScore(key) {
+        try {
+          return parseInt(localStorage.getItem(key)) || 0;
+        } catch (e) {
+          return 0;
+        }
       }
 
-      function calculateScore() {
-        return Math.max(0, 5000 - (errors * 70) - (timerSeconds * 4));
-      }
-
-      // ==================== LocalStorage Best Score ====================
-      function getBestScore() {
+      /**
+       * بهترین رکورد را در localStorage ذخیره می‌کند.
+       * @param {string} key - کلید ذخیره‌سازی
+       * @param {number} score - امتیاز جدید
+       * @returns {boolean} آیا رکورد جدید ثبت شده است؟
+       */
+      function setBestScore(key, score) {
         try {
-          return parseInt(localStorage.getItem('memoryGameBestScore')) || 0;
-        } catch (e) { return 0; }
-      }
-      function setBestScore(score) {
-        try {
-          const current = getBestScore();
+          const current = getBestScore(key);
           if (score > current) {
-            localStorage.setItem('memoryGameBestScore', score);
+            localStorage.setItem(key, score);
             return true;
           }
           return false;
-        } catch (e) { return false; }
-      }
-
-      // ==================== Activities List Overlay ====================
-      function renderActivitiesList() {
-        activityGrid.innerHTML = '';
-        allActivities.forEach(act => {
-          const card = document.createElement('div');
-          card.className = 'activity-card';
-          card.innerHTML = `
-            <img src="source/${act.img}" alt="${act.title}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f0e8d8%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23888%22 x=%2250%22 y=%2255%22 text-anchor=%22middle%22%3E📷%3C/text%3E%3C/svg%3E';">
-            <div class="act-name">${act.title}</div>
-            <div class="desc-placeholder">توضیحات: ...</div>
-          `;
-          activityGrid.appendChild(card);
-        });
-      }
-
-      function openActivitiesList() {
-        renderActivitiesList();
-        listOverlay.classList.add('active');
-      }
-
-      function closeActivitiesList() {
-        listOverlay.classList.remove('active');
-      }
-
-      // ==================== Card Rendering ====================
-      function buildCardsFromActivities(activities) {
-        const cards = [];
-        activities.forEach(act => {
-          // Text card – no description, only title
-          cards.push({
-            pairId: act.id,
-            type: 'text',
-            title: act.title,
-            desc: '',       // no description for text cards
-            img: null
-          });
-          // Image card – title + description
-          cards.push({
-            pairId: act.id,
-            type: 'image',
-            title: act.title,
-            desc: act.desc,
-            img: act.img
-          });
-        });
-        return cards;
-      }
-
-      function renderGameGrid(cards) {
-        gameGrid.innerHTML = '';
-        cards.forEach((card, index) => {
-          const container = document.createElement('div');
-          container.className = 'card-container';
-          container.dataset.pairId = card.pairId;
-          container.dataset.type = card.type;
-          container.dataset.index = index;
-          container.style.animationDelay = `${index * 0.04}s`;
-
-          const cardDiv = document.createElement('div');
-          cardDiv.className = 'card';
-
-          // Back face
-          const back = document.createElement('div');
-          back.className = 'card-face card-back';
-          back.innerHTML = generateCardBackSVG();
-
-          // Front face
-          const front = document.createElement('div');
-          front.className = 'card-face card-front';
-          if (card.type === 'image') {
-            front.innerHTML = `
-              <div class="card-image-wrapper">
-                <img src="source/${card.img}" alt="${card.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding:12px;color:#888;\\'>📷<br>تصویر در دسترس نیست</div>'">
-              </div>
-              <div class="card-title">${card.title}</div>
-              <div class="card-desc">${card.desc}</div>
-            `;
-          } else {
-            // Text card: only title, no description
-            front.innerHTML = `
-              <div class="card-title" style="font-size:1.1rem; flex:1; display:flex; align-items:center; justify-content:center;">${card.title}</div>
-            `;
-          }
-
-          cardDiv.appendChild(back);
-          cardDiv.appendChild(front);
-          container.appendChild(cardDiv);
-
-          container.addEventListener('click', (e) => handleCardClick(container));
-          gameGrid.appendChild(container);
-        });
-      }
-
-      // ==================== Card Interaction ====================
-      function getCardElement(container) {
-        return container.querySelector('.card');
-      }
-
-      function isCardFlipped(container) {
-        return getCardElement(container).classList.contains('flipped');
-      }
-
-      function flipCardUp(container) {
-        getCardElement(container).classList.add('flipped');
-      }
-
-      function flipCardDown(container) {
-        getCardElement(container).classList.remove('flipped');
-      }
-
-      function handleCardClick(container) {
-        if (!gameActive || gameFinished || isPreviewActive || isChecking) return;
-        if (container.classList.contains('matched')) return;
-        if (isCardFlipped(container)) return;
-        if (flippedCards.length >= 2) return;
-
-        soundClick();
-        flipCardUp(container);
-        flippedCards.push(container);
-
-        if (flippedCards.length === 2) {
-          attempts++;
-          updateStatsDisplay();
-          isChecking = true;
-          const [cardA, cardB] = flippedCards;
-          const pairIdA = cardA.dataset.pairId;
-          const pairIdB = cardB.dataset.pairId;
-          const typeA = cardA.dataset.type;
-          const typeB = cardB.dataset.type;
-
-          // Match condition: same pairId, different types (text + image)
-          if (pairIdA === pairIdB && typeA !== typeB) {
-            // Correct match
-            setTimeout(() => {
-              soundMatch();
-              cardA.classList.add('matched');
-              cardB.classList.add('matched');
-              matchedPairs.add(parseInt(pairIdA));
-              flippedCards = [];
-              isChecking = false;
-              updateStatsDisplay();
-              if (matchedPairs.size === PAIRS_PER_GAME) {
-                endGame(true);
-              }
-            }, 400);
-          } else {
-            // Wrong match
-            errors++;
-            updateStatsDisplay();
-            setTimeout(() => {
-              soundError();
-              flipCardDown(cardA);
-              flipCardDown(cardB);
-              flippedCards = [];
-              isChecking = false;
-            }, 900);
-          }
+        } catch (e) {
+          return false;
         }
       }
 
-      // ==================== Timer ====================
-      function startTimer() {
-        if (timerInterval) clearInterval(timerInterval);
-        timerSeconds = 0;
-        timerDisplay.textContent = formatTime(timerSeconds);
-        timerInterval = setInterval(() => {
-          timerSeconds++;
-          timerDisplay.textContent = formatTime(timerSeconds);
-        }, 1000);
+      // ==================== مدیریت صفحه‌ها (Screen Manager) ====================
+      /**
+       * صفحه مشخص‌شده را نمایش و مابقی را مخفی می‌کند.
+       * @param {string} screenId - شناسه صفحه ('home', 'memory', 'puzzle')
+       */
+      function switchScreen(screenId) {
+        Object.keys(screens).forEach(key => {
+          screens[key].classList.add('hidden');
+        });
+        screens[screenId].classList.remove('hidden');
+        endOverlay.classList.remove('active');
       }
 
-      function stopTimer() {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
+      // ==================== کلاس بازی حافظه (Memory Game Class) ====================
+      class MemoryGame {
+        constructor() {
+          this.PAIRS_PER_GAME = 4;
+          this.cards = [];
+          this.flippedCards = [];
+          this.matchedPairs = new Set();
+          this.attempts = 0;
+          this.errors = 0;
+          this.timerSeconds = 0;
+          this.timerInterval = null;
+          this.isPreviewing = false;
+          this.isChecking = false;
+          this.gameActive = false;
+          this.gameFinished = false;
+
+          // عناصر DOM
+          this.grid = document.getElementById('memoryGrid');
+          this.attemptsEl = document.getElementById('memAttempts');
+          this.errorsEl = document.getElementById('memErrors');
+          this.timerEl = document.getElementById('memTimer');
+          this.pairsLeftEl = document.getElementById('memPairsLeft');
         }
-      }
 
-      // ==================== Preview Phase ====================
-      function startPreview() {
-        isPreviewActive = true;
-        gameActive = false;
-        const allContainers = document.querySelectorAll('.card-container');
-        allContainers.forEach(c => flipCardUp(c));
-        setTimeout(() => {
-          allContainers.forEach(c => {
-            if (!c.classList.contains('matched')) flipCardDown(c);
+        // به‌روزرسانی آمار در رابط کاربری
+        updateStatsUI() {
+          this.attemptsEl.textContent = this.attempts.toLocaleString('fa-IR');
+          this.errorsEl.textContent = this.errors.toLocaleString('fa-IR');
+          const left = this.PAIRS_PER_GAME - this.matchedPairs.size;
+          this.pairsLeftEl.textContent = left.toLocaleString('fa-IR');
+        }
+
+        // محاسبه امتیاز نهایی
+        calculateScore() {
+          return Math.max(0, 5000 - (this.errors * 70) - (this.timerSeconds * 4));
+        }
+
+        // شروع تایمر
+        startTimer() {
+          if (this.timerInterval) clearInterval(this.timerInterval);
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
+          this.timerInterval = setInterval(() => {
+            this.timerSeconds++;
+            this.timerEl.textContent = formatTime(this.timerSeconds);
+          }, 1000);
+        }
+
+        // توقف تایمر
+        stopTimer() {
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+        }
+
+        // ساخت کارت‌ها بر اساس فعالیت‌ها
+        buildCards(activities) {
+          const cards = [];
+          activities.forEach(act => {
+            cards.push({ pairId: act.id, type: 'text', title: act.title, desc: '', img: null });
+            cards.push({ pairId: act.id, type: 'image', title: act.title, desc: act.desc, img: act.img });
           });
-          isPreviewActive = false;
-          gameActive = true;
-          startTimer();
-        }, 2800);
-      }
+          return cards;
+        }
 
-      // ==================== Game Flow ====================
-      function initGame() {
-        stopTimer();
-        attempts = 0;
-        errors = 0;
-        matchedPairs.clear();
-        flippedCards = [];
-        isChecking = false;
-        isPreviewActive = false;
-        gameActive = false;
-        gameFinished = false;
-        timerSeconds = 0;
-        timerDisplay.textContent = formatTime(0);
-        updateStatsDisplay();
+        // رندر کردن کارت‌ها در گرید
+        renderGrid(cards) {
+          this.grid.innerHTML = '';
+          cards.forEach((c, i) => {
+            const container = document.createElement('div');
+            container.className = 'card-container';
+            container.dataset.pairId = c.pairId;
+            container.dataset.type = c.type;
+            container.dataset.index = i;
+            container.style.animationDelay = `${i * 0.05}s`;
 
-        // Randomly pick 4 activities
-        const shuffledActs = shuffleArray(allActivities);
-        const selected = shuffledActs.slice(0, PAIRS_PER_GAME);
-        cardsData = shuffleArray(buildCardsFromActivities(selected));
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
 
-        renderGameGrid(cardsData);
-        // Start preview after a tiny delay for rendering
-        setTimeout(() => startPreview(), 200);
-      }
+            // پشت کارت
+            const back = document.createElement('div');
+            back.className = 'card-face card-back';
 
-      function endGame(won = true) {
-        gameFinished = true;
-        gameActive = false;
-        stopTimer();
-        const score = calculateScore();
-        const isNewBest = setBestScore(score);
-        const bestEver = getBestScore();
+            // روی کارت
+            const front = document.createElement('div');
+            front.className = 'card-face card-front';
+            if (c.type === 'image') {
+              front.innerHTML = `
+                <div class="card-image-wrapper">
+                  <img src="${c.img}" alt="${c.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=padding:12px;color:#888;>تصویر در دسترس نیست</div>'">
+                </div>
+                <div class="card-title">${c.title}</div>
+                <div class="card-desc">${c.desc}</div>
+              `;
+            } else {
+              front.innerHTML = `<div class="card-title" style="font-size:1.1rem; flex:1; display:flex; align-items:center; justify-content:center;">${c.title}</div>`;
+            }
 
-        if (won) {
-          finalScoreEl.textContent = score.toLocaleString('fa-IR');
-          finalErrorsEl.textContent = errors.toLocaleString('fa-IR');
-          finalTimeEl.textContent = formatTime(timerSeconds);
-          bestRecordDisplay.innerHTML = isNewBest ? 
-            `🎉 رکورد جدید! ${score.toLocaleString('fa-IR')}` : 
-            `🏅 بهترین رکورد: ${bestEver.toLocaleString('fa-IR')}`;
-          
+            cardDiv.appendChild(back);
+            cardDiv.appendChild(front);
+            container.appendChild(cardDiv);
+            container.addEventListener('click', () => this.handleCardClick(container));
+            this.grid.appendChild(container);
+          });
+        }
+
+        // برگرداندن یک کارت
+        flipCard(container, up) {
+          container.querySelector('.card').classList.toggle('flipped', up);
+        }
+
+        // مدیریت کلیک روی کارت
+        handleCardClick(container) {
+          if (!this.gameActive || this.gameFinished || this.isPreviewing || this.isChecking) return;
+          if (container.classList.contains('matched') || container.querySelector('.card').classList.contains('flipped')) return;
+          if (this.flippedCards.length >= 2) return;
+
+          soundClick();
+          this.flipCard(container, true);
+          this.flippedCards.push(container);
+
+          if (this.flippedCards.length === 2) {
+            this.attempts++;
+            this.updateStatsUI();
+            this.isChecking = true;
+            const [a, b] = this.flippedCards;
+            const isMatch = (a.dataset.pairId === b.dataset.pairId) && (a.dataset.type !== b.dataset.type);
+
+            if (isMatch) {
+              setTimeout(() => {
+                soundMatch();
+                a.classList.add('matched');
+                b.classList.add('matched');
+                this.matchedPairs.add(parseInt(a.dataset.pairId));
+                this.flippedCards = [];
+                this.isChecking = false;
+                this.updateStatsUI();
+                if (this.matchedPairs.size === this.PAIRS_PER_GAME) {
+                  this.endGame();
+                }
+              }, 400);
+            } else {
+              this.errors++;
+              this.updateStatsUI();
+              setTimeout(() => {
+                soundError();
+                this.flipCard(a, false);
+                this.flipCard(b, false);
+                this.flippedCards = [];
+                this.isChecking = false;
+              }, 900);
+            }
+          }
+        }
+
+        // مرحله پیش‌نمایش کارت‌ها
+        startPreview() {
+          this.isPreviewing = true;
+          this.gameActive = false;
+          const allContainers = document.querySelectorAll('#memoryGrid .card-container');
+          allContainers.forEach(c => this.flipCard(c, true));
           setTimeout(() => {
-            endOverlay.classList.add('active');
-            soundWin();
-            spawnConfetti();
-          }, 600);
+            allContainers.forEach(c => {
+              if (!c.classList.contains('matched')) this.flipCard(c, false);
+            });
+            this.isPreviewing = false;
+            this.gameActive = true;
+            this.startTimer();
+          }, 2800);
+        }
+
+        // شروع بازی
+        init() {
+          this.stopTimer();
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
+          this.attempts = 0;
+          this.errors = 0;
+          this.matchedPairs.clear();
+          this.flippedCards = [];
+          this.isChecking = false;
+          this.isPreviewing = false;
+          this.gameActive = false;
+          this.gameFinished = false;
+          this.updateStatsUI();
+
+          const selected = shuffleArray(allActivities).slice(0, this.PAIRS_PER_GAME);
+          this.cards = shuffleArray(this.buildCards(selected));
+          this.renderGrid(this.cards);
+          setTimeout(() => this.startPreview(), 200);
+        }
+
+        // پایان بازی
+        endGame() {
+          this.gameFinished = true;
+          this.gameActive = false;
+          this.stopTimer();
+          const score = this.calculateScore();
+          const isNewBest = setBestScore('memoryBestScore', score);
+          const bestEver = getBestScore('memoryBestScore');
+
+          const modalHTML = `
+            <div style="font-size:3rem;">🏆</div>
+            <h2>آفرین! همه جفت‌ها پیدا شد</h2>
+            <div class="big-text">${score.toLocaleString('fa-IR')}</div>
+            <div class="detail-row">
+              <span>❌ خطا: <strong>${this.errors.toLocaleString('fa-IR')}</strong></span>
+              <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
+            </div>
+            <div style="background: var(--gold-pale, #f7efd2); border-radius:20px; padding:6px 18px; display:inline-block; font-weight:700; color:var(--maroon);">
+              ${isNewBest ? '🎉 رکورد جدید!' : `🏅 بهترین رکورد: ${bestEver.toLocaleString('fa-IR')}`}
+            </div>
+            <div class="promo-section">
+              <div>با هیئت بیشتر آشنا شوید</div>
+              <div class="promo-links">
+                <a href="https://zovvar.com" target="_blank" class="promo-link">🌐 سایت هیئت</a>
+                <a href="https://eitaa.com/zovvaralzahra" target="_blank" class="promo-link">📱 کانال ایتا</a>
+              </div>
+            </div>
+            <button class="btn-replay" id="btnMemoryReplay">🔄 بازی دوباره</button>
+          `;
+          endModal.innerHTML = modalHTML;
+          endOverlay.classList.add('active');
+          soundWin();
+          this.spawnConfetti();
+
+          document.getElementById('btnMemoryReplay').addEventListener('click', () => {
+            endOverlay.classList.remove('active');
+            this.init();
+          });
+        }
+
+        // ذرات شادی (Confetti)
+        spawnConfetti() {
+          const colors = ['#d4af37', '#f9e076', '#3d1c1c', '#2ecc71', '#e74c3c', '#3498db'];
+          for (let i = 0; i < 100; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.top = -(Math.random() * 30 + 10) + 'px';
+            piece.style.width = (Math.random() * 8 + 5) + 'px';
+            piece.style.height = (Math.random() * 8 + 5) + 'px';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            piece.style.animationDelay = Math.random() * 1 + 's';
+            confettiContainer.appendChild(piece);
+          }
+          setTimeout(() => { confettiContainer.innerHTML = ''; }, 4500);
         }
       }
 
-      // ==================== Confetti ====================
-      function spawnConfetti() {
-        const colors = ['#c9a84c','#e0c878','#1a4a2a','#2ecc71','#f1c40f','#e74c3c','#3498db','#9b59b6'];
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < 120; i++) {
-          const piece = document.createElement('div');
-          piece.className = 'confetti-piece';
-          piece.style.left = Math.random() * 100 + '%';
-          piece.style.top = -(Math.random() * 40 + 10) + 'px';
-          piece.style.width = (Math.random() * 8 + 5) + 'px';
-          piece.style.height = (Math.random() * 8 + 5) + 'px';
-          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-          piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-          piece.style.animationDuration = (Math.random() * 2.5 + 2) + 's';
-          piece.style.animationDelay = Math.random() * 1.2 + 's';
-          fragment.appendChild(piece);
+      // ==================== کلاس بازی پازل (Sliding Puzzle Class) ====================
+      class PuzzleGame {
+        constructor() {
+          this.SIZE = 3;
+          this.EMPTY_INDEX = 8; // ایندکس خانه خالی (پایین-راست)
+          this.tiles = []; // چیدمان فعلی: هر خانه شامل ایندکس قطعه اصلی است (0 تا 8)
+          this.moves = 0;
+          this.timerSeconds = 0;
+          this.timerInterval = null;
+          this.gameActive = false;
+          this.gameFinished = false;
+          this.currentImage = '';
+
+          // عناصر DOM
+          this.grid = document.getElementById('puzzleGrid');
+          this.timerEl = document.getElementById('puzTimer');
+          this.movesEl = document.getElementById('puzMoves');
         }
-        confettiContainer.appendChild(fragment);
-        setTimeout(() => { confettiContainer.innerHTML = ''; }, 5000);
+
+        // به‌روزرسانی آمار
+        updateStatsUI() {
+          this.movesEl.textContent = this.moves.toLocaleString('fa-IR');
+          this.timerEl.textContent = formatTime(this.timerSeconds);
+        }
+
+        // شروع تایمر
+        startTimer() {
+          if (this.timerInterval) return;
+          this.timerInterval = setInterval(() => {
+            this.timerSeconds++;
+            this.timerEl.textContent = formatTime(this.timerSeconds);
+          }, 1000);
+        }
+
+        // توقف تایمر
+        stopTimer() {
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+        }
+
+        // یافتن موقعیت خانه خالی
+        findEmptyPos() {
+          return this.tiles.indexOf(this.EMPTY_INDEX);
+        }
+
+        // بررسی مجاورت دو خانه (فاصله منهتنی = 1)
+        isAdjacent(pos1, pos2) {
+          const r1 = Math.floor(pos1 / this.SIZE);
+          const c1 = pos1 % this.SIZE;
+          const r2 = Math.floor(pos2 / this.SIZE);
+          const c2 = pos2 % this.SIZE;
+          return (Math.abs(r1 - r2) + Math.abs(c1 - c2)) === 1;
+        }
+
+        // جابجایی قطعه (در صورت مجاورت با خالی)
+        moveTile(tilePos) {
+          if (!this.gameActive || this.gameFinished) return;
+          const emptyPos = this.findEmptyPos();
+          if (this.isAdjacent(tilePos, emptyPos)) {
+            [this.tiles[tilePos], this.tiles[emptyPos]] = [this.tiles[emptyPos], this.tiles[tilePos]];
+            this.moves++;
+            this.updateStatsUI();
+            this.renderGrid();
+
+            // شروع تایمر در اولین حرکت
+            if (!this.timerInterval) {
+              this.startTimer();
+            }
+
+            // بررسی برد
+            if (this.checkWin()) {
+              this.endGame();
+            }
+          }
+        }
+
+        // بررسی وضعیت برد (آرایه مرتب باشد)
+        checkWin() {
+          for (let i = 0; i < this.tiles.length; i++) {
+            if (this.tiles[i] !== i) return false;
+          }
+          return true;
+        }
+
+        // رندر کردن گرید پازل
+        renderGrid() {
+          this.grid.innerHTML = '';
+          for (let pos = 0; pos < this.tiles.length; pos++) {
+            const piece = document.createElement('div');
+            piece.className = 'puzzle-piece';
+            const tileIndex = this.tiles[pos];
+
+            if (tileIndex === this.EMPTY_INDEX) {
+              piece.classList.add('empty');
+            } else {
+              const row = Math.floor(tileIndex / this.SIZE);
+              const col = tileIndex % this.SIZE;
+              piece.style.backgroundImage = `url(${this.currentImage})`;
+              piece.style.backgroundSize = '300% 300%';
+              piece.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+              piece.addEventListener('click', () => this.moveTile(pos));
+            }
+            this.grid.appendChild(piece);
+          }
+        }
+
+        // بر هم زدن قطعات (100 حرکت تصادفی معتبر)
+        shuffleTiles() {
+          this.tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+          for (let i = 0; i < 100; i++) {
+            const emptyPos = this.findEmptyPos();
+            const possibleMoves = [];
+            const r = Math.floor(emptyPos / this.SIZE);
+            const c = emptyPos % this.SIZE;
+            if (r > 0) possibleMoves.push(emptyPos - this.SIZE);
+            if (r < this.SIZE - 1) possibleMoves.push(emptyPos + this.SIZE);
+            if (c > 0) possibleMoves.push(emptyPos - 1);
+            if (c < this.SIZE - 1) possibleMoves.push(emptyPos + 1);
+            const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            [this.tiles[emptyPos], this.tiles[move]] = [this.tiles[move], this.tiles[emptyPos]];
+          }
+        }
+
+        // شروع بازی جدید
+        init() {
+          this.stopTimer();
+          this.timerSeconds = 0;
+          this.moves = 0;
+          this.gameActive = true;
+          this.gameFinished = false;
+          this.updateStatsUI();
+
+          // انتخاب تصادفی تصویر
+          const randomAct = allActivities[Math.floor(Math.random() * allActivities.length)];
+          this.currentImage = randomAct.img;
+
+          this.shuffleTiles();
+          this.renderGrid();
+        }
+
+        // پایان بازی
+        endGame() {
+          this.gameActive = false;
+          this.gameFinished = true;
+          this.stopTimer();
+
+          const bestTime = getBestScore('puzzleBestTime');
+          let isNewBest = false;
+          if (bestTime === 0 || this.timerSeconds < bestTime) {
+            setBestScore('puzzleBestTime', this.timerSeconds);
+            isNewBest = true;
+          }
+          const displayBest = isNewBest ? this.timerSeconds : bestTime;
+
+          const modalHTML = `
+            <div style="font-size:3rem;">🧩</div>
+            <h2>تبریک! تصویر کامل شد 🎉</h2>
+            <div class="detail-row">
+              <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
+              <span>🔄 حرکات: <strong>${this.moves.toLocaleString('fa-IR')}</strong></span>
+            </div>
+            <div style="background: var(--gold-pale, #f7efd2); border-radius:20px; padding:6px 18px; display:inline-block; font-weight:700; color:var(--maroon);">
+              ${isNewBest ? '🎉 رکورد جدید!' : `🏅 بهترین زمان: ${formatTime(displayBest)}`}
+            </div>
+            <div class="promo-section">
+              <div>با هیئت بیشتر آشنا شوید</div>
+              <div class="promo-links">
+                <a href="https://zovvar.com" target="_blank" class="promo-link">🌐 سایت هیئت</a>
+                <a href="https://eitaa.com/zovvaralzahra" target="_blank" class="promo-link">📱 کانال ایتا</a>
+              </div>
+            </div>
+            <button class="btn-replay" id="btnPuzzleReplay">🔄 بازی دوباره</button>
+          `;
+          endModal.innerHTML = modalHTML;
+          endOverlay.classList.add('active');
+          soundWin();
+          this.spawnConfetti();
+
+          document.getElementById('btnPuzzleReplay').addEventListener('click', () => {
+            endOverlay.classList.remove('active');
+            this.init();
+          });
+        }
+
+        // ذرات شادی (Confetti)
+        spawnConfetti() {
+          const colors = ['#d4af37', '#f9e076', '#3d1c1c', '#2ecc71', '#e74c3c', '#3498db'];
+          for (let i = 0; i < 80; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.top = -(Math.random() * 30 + 10) + 'px';
+            piece.style.width = (Math.random() * 8 + 5) + 'px';
+            piece.style.height = (Math.random() * 8 + 5) + 'px';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            piece.style.animationDelay = Math.random() * 1 + 's';
+            confettiContainer.appendChild(piece);
+          }
+          setTimeout(() => { confettiContainer.innerHTML = ''; }, 4500);
+        }
       }
 
-      // ==================== Event Listeners ====================
-      btnStartGame.addEventListener('click', () => {
-        initAudio();
-        startScreen.classList.add('hidden');
-        initGame();
+      // ==================== ایجاد نمونه‌های بازی ====================
+      const memoryGame = new MemoryGame();
+      const puzzleGame = new PuzzleGame();
+
+      // ==================== مدیریت رویدادهای کلی (Global Event Listeners) ====================
+      btnGoMemory.addEventListener('click', () => {
+        switchScreen('memory');
+        memoryGame.init();
       });
 
-      btnReset.addEventListener('click', () => {
-        initAudio();
-        initGame();
-        endOverlay.classList.remove('active');
-        listOverlay.classList.remove('active');
+      btnGoPuzzle.addEventListener('click', () => {
+        switchScreen('puzzle');
+        puzzleGame.init();
       });
 
-      btnReplay.addEventListener('click', () => {
-        initAudio();
-        endOverlay.classList.remove('active');
-        initGame();
+      btnMemoryBack.addEventListener('click', () => {
+        memoryGame.stopTimer();
+        switchScreen('home');
       });
 
-      btnShowList.addEventListener('click', () => {
-        openActivitiesList();
+      btnPuzzleBack.addEventListener('click', () => {
+        puzzleGame.stopTimer();
+        switchScreen('home');
       });
 
-      btnCloseList.addEventListener('click', () => {
-        closeActivitiesList();
-      });
-
-      // Close overlays when clicking outside modal
       endOverlay.addEventListener('click', (e) => {
         if (e.target === endOverlay) endOverlay.classList.remove('active');
       });
-      listOverlay.addEventListener('click', (e) => {
-        if (e.target === listOverlay) closeActivitiesList();
-      });
 
-      // Ensure audio context on first user interaction
-      document.body.addEventListener('click', initAudio, { once: true });
-      document.body.addEventListener('touchstart', initAudio, { once: true });
+      // فعال‌سازی صدا با اولین تعامل کاربر
+      document.body.addEventListener('click', initAudioContext, { once: true });
+      document.body.addEventListener('touchstart', initAudioContext, { once: true });
 
-      // Initial state
-      gameGrid.innerHTML = '';
-      updateStatsDisplay();
+      // مقداردهی اولیه: نمایش صفحه خانه
+      switchScreen('home');
     })();
   </script>
 </body>
