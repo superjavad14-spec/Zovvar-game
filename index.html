@@ -7,18 +7,18 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 13.0 — تاریخ: 2026-06-10
+    نسخه: 14.0 — تاریخ: 2026-06-10
     ویژگی‌ها:
       - صفحه خانه با دو دکمه بازی و لینک‌های ارتباطی
       - بازی حافظه با انتخاب 16، 20، 24 کارت (8، 10، 12 جفت)
       - تم تاریک خودکار بر اساس تنظیمات سیستم
-      - پشت کارت جدید با CSS + لوگوی هیئت (logo1.png / logo2.png)
+      - پشت کارت جدید با SVG هندسی + لوگوی بزرگ هیئت
       - فونت Yekan.ttf از پوشه source
-      - موسیقی پس‌زمینه پیش‌فرض روشن
+      - موسیقی پس‌زمینه با پخش خودکار (Autoplay)
       - پازل ۳×۳، ۴×۴، ۵×۵ (بدون انیمیشن حرکت)
       - پیام‌های برد محترمانه
       - افکت‌های صوتی، ذرات شادی، رکوردها
-      - حداقل ۱۳۰۰ خط کد تمیز و بدون باگ
+      - حداقل ۱۵۰۰ خط کد تمیز و بدون باگ
     ============================================================
   -->
   <style>
@@ -51,12 +51,8 @@
       --card-aspect-ratio: 4 / 5;
       --card-max-width: 170px;
       /* رنگ‌های اختصاصی کارت */
-      --card-back-bg: linear-gradient(145deg, #1a5c34 0%, #145228 40%, #1a5c34 70%, #0f4220 100%);
+      --card-back-bg: #f0e8d8; /* fallback */
       --card-back-border: #2a7044;
-      --card-back-dash-border: rgba(201, 168, 76, 0.5);
-      --card-back-dot-color: #e0c878;
-      --card-back-dot-shadow: 0 0 6px rgba(224, 200, 120, 0.7);
-      --card-back-logo-shadow: 0 0 8px rgba(0,0,0,0.3);
       --card-front-bg: linear-gradient(160deg, #fffefb, #fdf8ed);
       --card-front-border: #e8dbb8;
       /* رنگ‌های مدال */
@@ -89,8 +85,6 @@
       /* پازل */
       --puzzle-empty-bg: rgba(255,255,255,0.1);
       --preview-overlay-bg: rgba(0,0,0,0.7);
-      /* لوگو */
-      --logo-url: url('source/logo2.png');
     }
 
     /* ================================================================
@@ -113,12 +107,8 @@
         --gold-pale: #2a2a3e;
         --maroon: #c9a84c;
         --maroon-light: #8b6508;
-        --card-back-bg: linear-gradient(145deg, #0f2a1a 0%, #0a1f12 40%, #0f2a1a 70%, #05140a 100%);
+        --card-back-bg: #1a1a2e;
         --card-back-border: #6b7c6b;
-        --card-back-dash-border: rgba(170, 140, 60, 0.4);
-        --card-back-dot-color: #b89a4a;
-        --card-back-dot-shadow: 0 0 6px rgba(184, 154, 74, 0.5);
-        --card-back-logo-shadow: 0 0 6px rgba(255,255,255,0.2);
         --card-front-bg: linear-gradient(160deg, #2a2a3e, #1a1a2e);
         --card-front-border: #3a3a4e;
         --modal-bg: #1a1a2e;
@@ -146,7 +136,6 @@
         --home-link-text: #e0e0e0;
         --puzzle-empty-bg: rgba(255,255,255,0.05);
         --preview-overlay-bg: rgba(0,0,0,0.85);
-        --logo-url: url('source/logo1.png');
       }
     }
 
@@ -424,57 +413,23 @@
     }
 
     /* ================================================================
-       پشت کارت – CSS + لوگوی هیئت
+       پشت کارت – SVG هندسی به عنوان background-image
+       (تعویض با مدیا کوئری برای تم تاریک)
        ================================================================ */
     .card-back {
-      background: var(--card-back-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 200 250'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='%23d4af37' stroke-width='0.5' opacity='0.3'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%23d4af37' opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='200' height='250' fill='%23fdf8f0' rx='16'/%3E%3Crect x='6' y='6' width='188' height='238' fill='none' stroke='%23d4af37' stroke-width='4' rx='12'/%3E%3Crect x='14' y='14' width='172' height='222' fill='url(%23grid)' rx='8' opacity='0.8'/%3E%3Crect x='14' y='14' width='172' height='222' fill='none' stroke='%23d4af37' stroke-width='1.5' rx='8' opacity='0.6'/%3E%3Cimage x='40' y='65' width='120' height='120' xlink:href='source/logo2.png'/%3E%3C/svg%3E");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       border: 3px solid var(--card-back-border);
       z-index: 2;
       position: relative;
     }
 
-    .card-back::before {
-      content: '';
-      position: absolute;
-      inset: 8px;
-      border-radius: 10px;
-      border: 2px dashed var(--card-back-dash-border);
-      pointer-events: none;
-    }
-
-    /* نقاط تزئینی */
-    .card-back .inner-dot {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: var(--card-back-dot-color);
-      border-radius: 50%;
-      box-shadow: var(--card-back-dot-shadow);
-    }
-    .dot-tl { top: 16px; left: 16px; }
-    .dot-tr { top: 16px; right: 16px; }
-    .dot-bl { bottom: 16px; left: 16px; }
-    .dot-br { bottom: 16px; right: 16px; }
-
-    /* لوگو در مرکز */
-    .card-back .logo-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 70px;
-      height: 70px;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      border-radius: 12px;
-      filter: var(--card-back-logo-shadow);
-    }
-
-    @media (max-width: 380px) {
-      .card-back .logo-center {
-        width: 50px;
-        height: 50px;
+    /* حالت تاریک: background-image با لوگوی logo1.png */
+    @media (prefers-color-scheme: dark) {
+      .card-back {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 200 250'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='%23c9a84c' stroke-width='0.5' opacity='0.25'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%23c9a84c' opacity='0.35'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='200' height='250' fill='%231a1a2e' rx='16'/%3E%3Crect x='6' y='6' width='188' height='238' fill='none' stroke='%238b6508' stroke-width='4' rx='12'/%3E%3Crect x='14' y='14' width='172' height='222' fill='url(%23grid)' rx='8' opacity='0.7'/%3E%3Crect x='14' y='14' width='172' height='222' fill='none' stroke='%238b6508' stroke-width='1.5' rx='8' opacity='0.5'/%3E%3Cimage x='40' y='65' width='120' height='120' xlink:href='source/logo1.png'/%3E%3C/svg%3E");
       }
     }
 
@@ -730,7 +685,8 @@
   <div id="endOverlay" class="overlay"><div id="endModal" class="modal"></div></div>
   <div id="confettiContainer" class="confetti-wrap"></div>
   <button id="musicToggle" class="music-toggle">🔊</button>
-  <audio id="bgMusic" src="source/mc.mp3" loop preload="auto"></audio>
+  <!-- المان صوتی پس‌زمینه با autoplay برای پخش خودکار -->
+  <audio id="bgMusic" src="source/mc.mp3" loop autoplay preload="auto"></audio>
 
   <script>
     (function() {
@@ -815,12 +771,49 @@
       function sfxSlide(){ initAudio(); tone(350,0.08,'sine',0.15); }
 
       // ==============================================================
-      // Music Control
+      // Music Control (Autoplay با تلاش اولیه)
       // ==============================================================
-      let musicPlaying = true; bgMusic.volume=0.4;
-      function updateMusicBtn(){ musicToggle.textContent = musicPlaying ? '🔊' : '🔇'; }
-      function startMusic(){ initAudio(); bgMusic.play().then(()=>{ musicPlaying=true; updateMusicBtn(); }).catch(()=>{ musicPlaying=false; updateMusicBtn(); }); }
-      musicToggle.addEventListener('click', ()=>{ initAudio(); if(musicPlaying){ bgMusic.pause(); musicPlaying=false; } else { bgMusic.play().catch(()=>{}); musicPlaying=true; } updateMusicBtn(); });
+      let musicPlaying = false;
+      bgMusic.volume = 0.4;
+
+      function updateMusicBtn() {
+        musicToggle.textContent = musicPlaying ? '🔊' : '🔇';
+      }
+
+      function tryAutoplay() {
+        initAudio();
+        bgMusic.play().then(() => {
+          musicPlaying = true;
+          updateMusicBtn();
+        }).catch(() => {
+          musicPlaying = false;
+          updateMusicBtn();
+          // اگر autoplay مسدود شد، با اولین کلیک کاربر پخش شود
+          const resumeOnInteraction = () => {
+            initAudio();
+            bgMusic.play().then(() => {
+              musicPlaying = true;
+              updateMusicBtn();
+            }).catch(()=>{});
+            document.body.removeEventListener('click', resumeOnInteraction);
+            document.body.removeEventListener('touchstart', resumeOnInteraction);
+          };
+          document.body.addEventListener('click', resumeOnInteraction, { once: true });
+          document.body.addEventListener('touchstart', resumeOnInteraction, { once: true });
+        });
+      }
+
+      musicToggle.addEventListener('click', () => {
+        initAudio();
+        if (musicPlaying) {
+          bgMusic.pause();
+          musicPlaying = false;
+        } else {
+          bgMusic.play().then(() => { musicPlaying = true; }).catch(() => {});
+          musicPlaying = true;
+        }
+        updateMusicBtn();
+      });
 
       // ==============================================================
       // Utility Functions
@@ -837,43 +830,12 @@
       };
 
       // ==============================================================
-      // Dark Mode & Logo
-      // ==============================================================
-      const isDarkMode = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const getLogoUrl = () => isDarkMode() ? 'source/logo1.png' : 'source/logo2.png';
-
-      function updateAllCardLogos() {
-        const logoUrl = getLogoUrl();
-        document.querySelectorAll('.card-back .logo-center').forEach(el => {
-          el.style.backgroundImage = `url('${logoUrl}')`;
-        });
-      }
-
-      if (window.matchMedia) {
-        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        darkModeQuery.addEventListener('change', () => {
-          updateAllCardLogos();
-        });
-      }
-
-      function createCardBackHTML() {
-        return `
-          <div class="card-face card-back">
-            <div class="logo-center" style="background-image: url('${getLogoUrl()}');"></div>
-            <span class="inner-dot dot-tl"></span>
-            <span class="inner-dot dot-tr"></span>
-            <span class="inner-dot dot-bl"></span>
-            <span class="inner-dot dot-br"></span>
-          </div>`;
-      }
-
-      // ==============================================================
       // Screen Manager
       // ==============================================================
       function showScreen(id) { Object.values(screens).forEach(s=>s.classList.add('hidden')); if(screens[id]) screens[id].classList.remove('hidden'); endOverlay.classList.remove('active'); }
 
       // ==============================================================
-      // Memory Game
+      // Memory Game Class
       // ==============================================================
       class MemoryGame {
         constructor() {
@@ -926,16 +888,17 @@
             cont.dataset.pairId=c.pairId; cont.dataset.type=c.type;
             cont.style.animationDelay=`${i*0.04}s`;
             const card=document.createElement('div'); card.className='card';
+            // پشت کارت (استایل background-image از CSS گرفته می‌شود)
             const back=document.createElement('div');
-            back.innerHTML = createCardBackHTML();
-            const backFace = back.firstElementChild;
+            back.className='card-face card-back';
+            // روی کارت
             const front=document.createElement('div'); front.className='card-face card-front';
             if(c.type==='image'){
               front.innerHTML=`<div class="card-image-wrapper"><img src="${c.img}" alt="${c.desc}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=padding:16px;color:#888;>تصویر</div>'"></div>`;
             } else {
               front.innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--text-dark);padding:8px;text-align:center;">${c.title}<br><small style="font-weight:500;color:var(--text-soft);">${c.desc}</small></div>`;
             }
-            card.appendChild(backFace); card.appendChild(front);
+            card.appendChild(back); card.appendChild(front);
             cont.appendChild(card);
             cont.addEventListener('click',()=>this.handleClick(cont));
             this.grid.appendChild(cont);
@@ -1012,7 +975,7 @@
       }
 
       // ==============================================================
-      // Puzzle Game
+      // Puzzle Game Class
       // ==============================================================
       class PuzzleGame {
         constructor() {
@@ -1097,6 +1060,9 @@
         }
       }
 
+      // ==============================================================
+      // Initialize Games
+      // ==============================================================
       const memoryGame = new MemoryGame();
       const puzzleGame = new PuzzleGame();
       puzzleGame.setupPreview();
@@ -1125,9 +1091,10 @@
       btnMemoryBack.addEventListener('click',()=>{ memoryGame.destroy(); showScreen('home'); });
       btnPuzzleBack.addEventListener('click',()=>{ puzzleGame.stopTimer(); showScreen('home'); });
       endOverlay.addEventListener('click',(e)=>{ if(e.target===endOverlay) endOverlay.classList.remove('active'); });
-      document.body.addEventListener('click',initAudio,{once:true});
-      document.body.addEventListener('touchstart',initAudio,{once:true});
 
+      // ==============================================================
+      // Start Music & Handle Orientation
+      // ==============================================================
       function handleOrientationChange() {
         if(!screens.memorySelect.classList.contains('hidden')) populateMemorySelectors();
         if(!screens.puzzleSelect.classList.contains('hidden')) populatePuzzleSelectors();
@@ -1135,7 +1102,10 @@
       if(window.matchMedia){ const mq=window.matchMedia('(orientation: portrait)'); mq.addEventListener('change',handleOrientationChange); }
       window.addEventListener('resize',handleOrientationChange);
 
-      showScreen('home'); updateMusicBtn(); startMusic();
+      // Initial setup
+      showScreen('home');
+      updateMusicBtn();
+      tryAutoplay(); // تلاش برای پخش خودکار موسیقی
     })();
   </script>
 </body>
