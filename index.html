@@ -7,11 +7,13 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 13.0 — تاریخ: 2026-06-10
+    نسخه: 14.0 — تاریخ: 2026-06-10
     تغییرات:
-      - جایگزینی SVG پشت کارت با CSS + HTML + لوگوی هیئت
-      - پشتیبانی خودکار از تم روشن و تاریک برای پشت کارت
-      - رفع مشکل لود نشدن لوگو در تم تاریک با JS
+      - جایگزینی کامل SVG پشت کارت با CSS + لوگوی PNG
+      - لوگو: logo2.png (روشن) / logo1.png (تاریک)
+      - راه‌انداز JS برای اطمینان از تعویض لوگو در تغییر تم
+      - پشتیبانی کامل از prefers-color-scheme
+      - تمام قابلیت‌های قبلی حفظ شده‌اند
     ============================================================
   -->
   <style>
@@ -76,6 +78,8 @@
       /* پازل */
       --puzzle-empty-bg: rgba(255,255,255,0.1);
       --preview-overlay-bg: rgba(0,0,0,0.7);
+      /* لوگو - پیش‌فرض روشن */
+      --logo-url: url('source/logo2.png');
     }
 
     /* ================================================================
@@ -125,6 +129,8 @@
         --home-link-text: #e0e0e0;
         --puzzle-empty-bg: rgba(255,255,255,0.05);
         --preview-overlay-bg: rgba(0,0,0,0.85);
+        /* لوگو - تاریک */
+        --logo-url: url('source/logo1.png');
       }
     }
 
@@ -227,6 +233,7 @@
     .home-subtitle strong { color: var(--maroon); font-weight: 800; }
     .btn-group { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 340px; align-items: center; margin-bottom: 24px; }
 
+    /* لینک‌های خانه */
     .home-links {
       display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
       justify-content: center; max-width: 400px; position: relative;
@@ -403,7 +410,7 @@
     }
 
     /* ================================================================
-       پشت کارت – طرح CSS با لوگوی هیئت (تم روشن)
+       پشت کارت – طرح CSS با لوگوی PNG (تم روشن)
        ================================================================ */
     .card-back {
       background: linear-gradient(145deg, #1a5c34 0%, #145228 40%, #1a5c34 70%, #0f4220 100%);
@@ -421,7 +428,7 @@
       pointer-events: none;
     }
 
-    /* نقاط تزئینی */
+    /* نقاط تزئینی چهار گوشه */
     .card-back .inner-dot {
       position: absolute;
       width: 10px;
@@ -435,7 +442,7 @@
     .dot-bl { bottom: 16px; left: 16px; }
     .dot-br { bottom: 16px; right: 16px; }
 
-    /* لوگو در مرکز */
+    /* لوگوی هیئت در مرکز کارت */
     .card-back .logo-center {
       position: absolute;
       top: 50%;
@@ -443,7 +450,7 @@
       transform: translate(-50%, -50%);
       width: 70px;
       height: 70px;
-      background-image: url('source/logo2.jpg');
+      background-image: var(--logo-url);
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
@@ -469,7 +476,7 @@
       }
       .card-back .logo-center {
         filter: drop-shadow(0 0 6px rgba(255,255,255,0.2));
-        /* background-image توسط جاوااسکریپت به logo1.jpg تغییر می‌کند */
+        /* background-image از طریق متغیر --logo-url تأمین می‌شود */
       }
     }
 
@@ -670,6 +677,7 @@
       <button class="btn" id="btnGoMemory">🧠 بازی حافظه</button>
       <button class="btn" id="btnGoPuzzle">🧩 تصویر به هم ریخته</button>
     </div>
+    <!-- لینک‌های ارتباطی با خط جداکننده -->
     <div class="home-links">
       <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="home-link">📝 عضویت</a>
       <a href="https://zovvar.com" target="_blank" rel="noopener" class="home-link">🌐 وب‌سایت</a>
@@ -677,12 +685,12 @@
     </div>
   </div>
 
-  <!-- صفحه انتخاب تعداد کارت -->
+  <!-- صفحه انتخاب تعداد کارت (حافظه) -->
   <div id="memorySelectScreen" class="screen hidden">
     <div class="game-header"><div class="org-name">🎴 انتخاب تعداد کارت</div></div>
     <div class="card-count-selector">
       <p>تعداد جفت‌ها را انتخاب کنید:</p>
-      <div class="selector-btns" id="memorySelectBtns"></div>
+      <div class="selector-btns" id="memorySelectBtns"><!-- توسط JS پر می‌شود --></div>
     </div>
     <button class="btn-control" id="btnMemorySelectBack">🏠 بازگشت به خانه</button>
   </div>
@@ -705,7 +713,7 @@
     <div class="game-header"><div class="org-name">🧩 انتخاب ابعاد پازل</div></div>
     <div class="card-count-selector">
       <p>اندازه پازل:</p>
-      <div class="selector-btns" id="puzzleSelectBtns"></div>
+      <div class="selector-btns" id="puzzleSelectBtns"><!-- توسط JS پر می‌شود --></div>
     </div>
     <button class="btn-control" id="btnPuzzleSelectBack">🏠 بازگشت به خانه</button>
   </div>
@@ -719,21 +727,36 @@
     </div>
     <div class="puzzle-wrapper" id="puzzleWrapper">
       <div id="puzzleGrid" class="puzzle-grid"></div>
-      <button class="puzzle-preview-btn" id="puzzlePreviewBtn">🔍</button>
-      <div class="preview-overlay" id="previewOverlay"><img id="previewImage" src="" alt="پیش‌نمایش"></div>
+      <button class="puzzle-preview-btn" id="puzzlePreviewBtn" title="پیش‌نمایش تصویر">🔍</button>
+      <div class="preview-overlay" id="previewOverlay">
+        <img id="previewImage" src="" alt="پیش‌نمایش تصویر">
+      </div>
     </div>
     <button class="btn-control" id="btnPuzzleBack">🏠 خانه</button>
   </div>
 
   <!-- مدال پایان بازی -->
-  <div id="endOverlay" class="overlay"><div id="endModal" class="modal"></div></div>
+  <div id="endOverlay" class="overlay">
+    <div id="endModal" class="modal"></div>
+  </div>
+
+  <!-- محفظه ذرات شادی -->
   <div id="confettiContainer" class="confetti-wrap"></div>
-  <button id="musicToggle" class="music-toggle">🔊</button>
+
+  <!-- دکمه کنترل موسیقی -->
+  <button id="musicToggle" class="music-toggle" title="پخش/توقف موسیقی">🔊</button>
+
+  <!-- المان صوتی پس‌زمینه -->
   <audio id="bgMusic" src="source/mc.mp3" loop preload="auto"></audio>
 
+  <!-- ================================================================
+       JavaScript Application Logic
+       ================================================================ -->
   <script>
     (function() {
-      // ==================== DOM References ====================
+      // ==============================================================
+      // DOM References (ارجاعات به عناصر HTML)
+      // ==============================================================
       const screens = {
         home: document.getElementById('homeScreen'),
         memorySelect: document.getElementById('memorySelectScreen'),
@@ -741,6 +764,7 @@
         puzzleSelect: document.getElementById('puzzleSelectScreen'),
         puzzle: document.getElementById('puzzleScreen')
       };
+
       const btnGoMemory = document.getElementById('btnGoMemory');
       const btnGoPuzzle = document.getElementById('btnGoPuzzle');
       const btnMemorySelectBack = document.getElementById('btnMemorySelectBack');
@@ -758,20 +782,50 @@
       const previewOverlay = document.getElementById('previewOverlay');
       const previewImage = document.getElementById('previewImage');
 
-      // ==================== Device Detection ====================
+      // ==============================================================
+      // Device Detection (تشخیص نوع دستگاه و orientation)
+      // ==============================================================
       const DeviceDetector = {
+        /**
+         * تشخیص نوع دستگاه بر اساس userAgent و ابعاد صفحه
+         * @returns {'mobile'|'tablet'|'desktop'}
+         */
         getDeviceType() {
           const ua = navigator.userAgent || '';
-          const w = window.innerWidth;
-          const max = Math.max(w, window.innerHeight);
-          if (/Mobi|Android(?!.*Tablet)|iPhone|iPod/i.test(ua) || max < 768) return 'mobile';
-          if (/iPad|Tablet|Android(?!.*Mobi)/i.test(ua) || (max >= 768 && max < 1024)) return 'tablet';
+          const width = window.innerWidth;
+          const maxDim = Math.max(width, window.innerHeight);
+          const isMobileUA = /Mobi|Android(?!.*Tablet)|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+          const isTabletUA = /iPad|Tablet|Android(?!.*Mobi)|PlayBook|Silk/i.test(ua);
+          if (isMobileUA || maxDim < 768) return 'mobile';
+          if (isTabletUA || (maxDim >= 768 && maxDim < 1024)) return 'tablet';
           return 'desktop';
         },
-        isLandscape() { return window.innerWidth > window.innerHeight; }
+
+        /**
+         * تشخیص جهت نمایش
+         * @returns {'landscape'|'portrait'}
+         */
+        getOrientation() {
+          if (window.screen && window.screen.orientation) {
+            return window.screen.orientation.type.includes('landscape') ? 'landscape' : 'portrait';
+          }
+          return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+        },
+
+        /** آیا دستگاه در حالت افقی است؟ */
+        isLandscape() {
+          return this.getOrientation() === 'landscape';
+        },
+
+        /** آیا دستگاه در حالت عمودی است؟ */
+        isPortrait() {
+          return this.getOrientation() === 'portrait';
+        }
       };
 
-      // ==================== Activities Data ====================
+      // ==============================================================
+      // Activity Data (اطلاعات فعالیت‌ها)
+      // ==============================================================
       const allActivities = [
         { id: 1, title: 'راهپیمایی اربعین', desc: 'پیاده‌روی عظیم اربعین', img: 'arbain.jpg' },
         { id: 2, title: 'اردوی برهان', desc: 'تقویت بنیه علمی و فرهنگی', img: 'borhan.jpg' },
@@ -787,80 +841,188 @@
         { id: 12, title: 'کلاس‌های کمک درسی', desc: 'تقویت دروس مدرسه', img: 'clas.jpg' }
       ];
 
-      // ==================== Audio Utilities ====================
+      // ==============================================================
+      // Audio Utilities (ابزارهای صوتی)
+      // ==============================================================
       let audioCtx = null;
-      function initAudio() { if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state ===
-          'suspended') audioCtx.resume(); }
 
-      function tone(f, d, t = 'sine', v = 0.2, delay = 0) { if (!audioCtx) return; try { const o = audioCtx.createOscillator(),
-            g = audioCtx.createGain();
-          o.type = t;
-          o.frequency.setValueAtTime(f, audioCtx.currentTime + delay);
-          g.gain.setValueAtTime(v, audioCtx.currentTime + delay);
-          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + d);
-          o.connect(g);
-          g.connect(audioCtx.destination);
-          o.start(audioCtx.currentTime + delay);
-          o.stop(audioCtx.currentTime + delay + d); } catch (e) {} }
+      /** راه‌اندازی AudioContext */
+      function initAudioContext() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
 
-      function sfxClick() { initAudio();
-        tone(700, 0.07); }
+      /**
+       * پخش یک تن صوتی ساده
+       * @param {number} frequency - فرکانس بر حسب هرتز
+       * @param {number} duration - مدت زمان
+       * @param {string} type - نوع موج
+       * @param {number} volume - بلندی صدا
+       * @param {number} delay - تأخیر
+       */
+      function playTone(frequency, duration, type = 'sine', volume = 0.2, delay = 0) {
+        if (!audioCtx) return;
+        try {
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.type = type;
+          oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime + delay);
+          gainNode.gain.setValueAtTime(volume, audioCtx.currentTime + delay);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.start(audioCtx.currentTime + delay);
+          oscillator.stop(audioCtx.currentTime + delay + duration);
+        } catch (e) { /* بی‌صدا */ }
+      }
 
-      function sfxMatch() { initAudio();
-        tone(523, 0.1, 'sine', 0.25, 0);
-        tone(659, 0.1, 'sine', 0.25, 0.1); }
+      // افکت‌های صوتی
+      function sfxClick() { initAudioContext(); playTone(700, 0.07); }
+      function sfxMatch() { initAudioContext(); playTone(523, 0.1, 'sine', 0.25, 0); playTone(659, 0.1, 'sine', 0.25, 0.1); playTone(784, 0.15, 'sine', 0.22, 0.2); }
+      function sfxError() { initAudioContext(); playTone(180, 0.18, 'triangle', 0.12); playTone(140, 0.15, 'triangle', 0.1, 0.08); }
+      function sfxWin() { initAudioContext(); [523, 659, 784, 1047, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'sine', 0.3, i * 0.12)); }
+      function sfxSlide() { initAudioContext(); playTone(350, 0.08, 'sine', 0.15); }
 
-      function sfxError() { initAudio();
-        tone(180, 0.15, 'triangle', 0.12); }
-
-      function sfxWin() { initAudio(); [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.15, 'sine', 0.3, i * 0.1)); }
-
-      function sfxSlide() { initAudio();
-        tone(350, 0.08, 'sine', 0.15); }
-
-      // ==================== Music Control ====================
+      // ==============================================================
+      // Music Control (کنترل موسیقی پس‌زمینه)
+      // ==============================================================
       let musicPlaying = true;
       bgMusic.volume = 0.4;
 
-      function updateMusicBtn() { musicToggle.textContent = musicPlaying ? '🔊' : '🔇'; }
+      /** به‌روزرسانی آیکون دکمه موسیقی */
+      function updateMusicButton() {
+        musicToggle.textContent = musicPlaying ? '🔊' : '🔇';
+      }
 
-      function startMusic() { initAudio();
-        bgMusic.play().then(() => { musicPlaying = true;
-          updateMusicBtn(); }).catch(() => { musicPlaying = false;
-          updateMusicBtn(); }); }
-      musicToggle.addEventListener('click', () => { initAudio(); if (musicPlaying) { bgMusic.pause();
-          musicPlaying = false; } else { bgMusic.play().catch(() => {});
-          musicPlaying = true; } updateMusicBtn(); });
+      /** تلاش برای پخش خودکار موسیقی */
+      function startMusic() {
+        initAudioContext();
+        bgMusic.play().then(() => {
+          musicPlaying = true;
+          updateMusicButton();
+        }).catch(() => {
+          musicPlaying = false;
+          updateMusicButton();
+        });
+      }
 
-      // ==================== Utilities ====================
-      const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (
-            i + 1));
-          [a[i], a[j]] = [a[j], a[i]]; } return a; };
-      const formatTime = s => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-      const getBest = k => { try { return parseInt(localStorage.getItem(k)) || 0; } catch (e) { return 0; } };
-      const setBest = (k, v) => { try { const cur = getBest(k); if (v > cur) { localStorage.setItem(k, v); return true; } return false; } catch (
-          e) { return false; } };
-      const spawnConfetti = (n = 100) => { const colors = ['#d4af37', '#f9e076', '#3d1c1c', '#2ecc71', '#e74c3c', '#3498db']; const
-          f = document.createDocumentFragment(); for (let i = 0; i < n; i++) { const p = document.createElement('div');
-          p.className = 'confetti-piece';
-          p.style.left = Math.random() * 100 + '%';
-          p.style.top = -(Math.random() * 30 + 10) + 'px';
-          p.style.width = (Math.random() * 8 + 5) + 'px';
-          p.style.height = (Math.random() * 8 + 5) + 'px';
-          p.style.background = colors[Math.floor(Math.random() * colors.length)];
-          p.style.animationDuration = (Math.random() * 2 + 2) + 's';
-          f.appendChild(p); }
-        confettiContainer.appendChild(f);
-        setTimeout(() => { confettiContainer.innerHTML = ''; }, 5000); };
+      /** تغییر وضعیت پخش/توقف موسیقی */
+      function toggleMusic() {
+        initAudioContext();
+        if (musicPlaying) {
+          bgMusic.pause();
+          musicPlaying = false;
+        } else {
+          bgMusic.play().then(() => { musicPlaying = true; }).catch(() => {});
+          musicPlaying = true;
+        }
+        updateMusicButton();
+      }
 
-      // ==================== Theme & Logo Management ====================
-      /** تشخیص تم تاریک */
-      function isDarkMode() { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+      musicToggle.addEventListener('click', toggleMusic);
 
-      /** دریافت URL لوگوی مناسب */
-      function getLogoUrl() { return isDarkMode() ? 'source/logo1.jpg' : 'source/logo2.jpg'; }
+      // ==============================================================
+      // Utility Functions (توابع کمکی)
+      // ==============================================================
+      /**
+       * بر زدن تصادفی آرایه (Fisher-Yates Shuffle)
+       * @param {Array} arr - آرایه ورودی
+       * @returns {Array} آرایه برخورده
+       */
+      function shuffleArray(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
 
-      /** ساخت HTML پشت کارت با لوگو و نقاط تزئینی */
+      /**
+       * قالب‌بندی زمان به صورت دقیقه:ثانیه
+       * @param {number} sec - ثانیه
+       * @returns {string} زمان قالب‌بندی شده
+       */
+      function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+      }
+
+      /**
+       * دریافت بهترین رکورد از localStorage
+       * @param {string} key - کلید
+       * @returns {number} مقدار
+       */
+      function getBestScore(key) {
+        try { return parseInt(localStorage.getItem(key)) || 0; } catch (e) { return 0; }
+      }
+
+      /**
+       * ذخیره بهترین رکورد در localStorage
+       * @param {string} key - کلید
+       * @param {number} score - امتیاز
+       * @returns {boolean} آیا رکورد جدید ثبت شد؟
+       */
+      function setBestScore(key, score) {
+        try {
+          const current = getBestScore(key);
+          if (score > current) {
+            localStorage.setItem(key, score);
+            return true;
+          }
+          return false;
+        } catch (e) { return false; }
+      }
+
+      // ==============================================================
+      // Theme & Logo Management (مدیریت تم و لوگو)
+      // ==============================================================
+      /**
+       * بررسی فعال بودن تم تاریک در سیستم
+       * @returns {boolean}
+       */
+      function isDarkMode() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+
+      /**
+       * دریافت URL لوگوی مناسب بر اساس تم فعلی
+       * @returns {string} مسیر فایل PNG
+       */
+      function getLogoUrl() {
+        return isDarkMode() ? 'source/logo1.png' : 'source/logo2.png';
+      }
+
+      /**
+       * به‌روزرسانی لوگوی تمام پشت کارت‌ها بر اساس تم فعلی
+       * این تابع برای مرورگرهایی که ممکن است متغیر CSS را در مدیا کوئری
+       * به درستی روی background-image اعمال نکنند، فراخوانی می‌شود.
+       */
+      function updateAllCardLogos() {
+        const logoSrc = getLogoUrl();
+        document.querySelectorAll('.card-back .logo-center').forEach(el => {
+          el.style.backgroundImage = `url('${logoSrc}')`;
+        });
+      }
+
+      // شنونده تغییر تم سیستم برای به‌روزرسانی لوگوها
+      if (window.matchMedia) {
+        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        darkModeQuery.addEventListener('change', () => {
+          // به‌روزرسانی لوگوها در تمام کارت‌های موجود
+          updateAllCardLogos();
+        });
+      }
+
+      /**
+       * ساخت HTML پشت کارت با لوگو و نقاط تزئینی
+       * @returns {string} رشته HTML
+       */
       function createCardBackHTML() {
         return `
           <div class="card-face card-back">
@@ -872,315 +1034,804 @@
           </div>`;
       }
 
-      /** به‌روزرسانی لوگوهای تمام پشت کارت‌ها بر اساس تم فعلی */
-      function updateAllCardLogos() {
-        const logoSrc = getLogoUrl();
-        document.querySelectorAll('.card-back .logo-center').forEach(el => {
-          el.style.backgroundImage = `url('${logoSrc}')`;
-        });
+      // ==============================================================
+      // Confetti Spawner (پخش ذرات شادی)
+      // ==============================================================
+      /**
+       * تولید و پخش ذرات شادی رنگی
+       * @param {number} count - تعداد ذرات
+       */
+      function spawnConfetti(count = 120) {
+        const colors = ['#d4af37', '#f9e076', '#3d1c1c', '#2ecc71', '#e74c3c', '#3498db', '#f39c12', '#9b59b6'];
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < count; i++) {
+          const piece = document.createElement('div');
+          piece.className = 'confetti-piece';
+          piece.style.left = Math.random() * 100 + '%';
+          piece.style.top = -(Math.random() * 40 + 10) + 'px';
+          piece.style.width = (Math.random() * 9 + 5) + 'px';
+          piece.style.height = (Math.random() * 9 + 5) + 'px';
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+          piece.style.animationDuration = (Math.random() * 2.5 + 2.5) + 's';
+          piece.style.animationDelay = Math.random() * 1.2 + 's';
+          fragment.appendChild(piece);
+        }
+        confettiContainer.appendChild(fragment);
+        setTimeout(() => { confettiContainer.innerHTML = ''; }, 5500);
       }
 
-      // شنونده تغییر تم سیستم برای به‌روزرسانی لوگوها
-      if (window.matchMedia) {
-        const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        darkQuery.addEventListener('change', () => {
-          updateAllCardLogos();
-        });
+      // ==============================================================
+      // Screen Manager (مدیریت نمایش صفحات)
+      // ==============================================================
+      /**
+       * نمایش صفحه مشخص و مخفی کردن بقیه
+       * @param {string} screenId - شناسه صفحه
+       */
+      function showScreen(screenId) {
+        Object.values(screens).forEach(s => s.classList.add('hidden'));
+        if (screens[screenId]) screens[screenId].classList.remove('hidden');
+        endOverlay.classList.remove('active');
       }
 
-      // ==================== Screen Manager ====================
-      function showScreen(id) { Object.values(screens).forEach(s => s.classList.add('hidden')); if (screens[id]) screens[id].classList
-          .remove('hidden');
-        endOverlay.classList.remove('active'); }
-
-      // ==================== Memory Game Class ====================
+      // ==============================================================
+      // Memory Game Class (کلاس بازی حافظه)
+      // ==============================================================
       class MemoryGame {
         constructor() {
-          this.pairs = 8;
-          this.total = 16;
-          this.cols = 4;
-          this.cards = [];
-          this.flipped = [];
-          this.matched = new Set();
-          this.attempts = 0;
-          this.errors = 0;
-          this.sec = 0;
-          this.timer = null;
-          this.preview = false;
-          this.check = false;
-          this.active = false;
-          this.done = false;
+          this.pairsCount = 8;          // تعداد جفت‌ها (پیش‌فرض ۸)
+          this.totalCards = 16;          // تعداد کل کارت‌ها
+          this.gridCols = 4;             // تعداد ستون‌های گرید
+          this.cards = [];               // آرایه کارت‌ها
+          this.flippedCards = [];        // کارت‌های برگشته فعلی
+          this.matchedPairs = new Set(); // جفت‌های پیدا شده
+          this.attempts = 0;             // تعداد تلاش‌ها
+          this.errors = 0;               // تعداد خطاها
+          this.timerSeconds = 0;         // ثانیه‌های سپری شده
+          this.timerInterval = null;     // اینتروال تایمر
+          this.isPreviewing = false;     // در حال پیش‌نمایش؟
+          this.isChecking = false;       // در حال بررسی جفت؟
+          this.gameActive = false;       // بازی فعال است؟
+          this.gameFinished = false;     // بازی تمام شده؟
+
+          // DOM elements
           this.grid = document.getElementById('memoryGrid');
-          this.attEl = document.getElementById('memAttempts');
-          this.errEl = document.getElementById('memErrors');
-          this.timEl = document.getElementById('memTimer');
-          this.leftEl = document.getElementById('memPairsLeft');
+          this.attemptsEl = document.getElementById('memAttempts');
+          this.errorsEl = document.getElementById('memErrors');
+          this.timerEl = document.getElementById('memTimer');
+          this.pairsLeftEl = document.getElementById('memPairsLeft');
           this._orientationHandler = null;
         }
-        updateStats() { this.attEl.textContent = this.attempts.toLocaleString('fa-IR');
-          this.errEl.textContent = this.errors.toLocaleString('fa-IR');
-          this.leftEl.textContent = (this.pairs - this.matched.size).toLocaleString('fa-IR'); }
-        startTimer() { if (this.timer) clearInterval(this.timer);
-          this.sec = 0;
-          this.timEl.textContent = formatTime(0);
-          this.timer = setInterval(() => { this.sec++;
-            this.timEl.textContent = formatTime(this.sec); }, 1000); }
-        stopTimer() { if (this.timer) { clearInterval(this.timer);
-            this.timer = null; } }
-        determineCols() { const dev = DeviceDetector.getDeviceType(); const land = DeviceDetector.isLandscape(); if (dev ===
-            'mobile' && !land) return 4; return this.total <= 16 ? 4 : 5; }
-        buildCards(acts) { const arr = [];
-          acts.forEach(a => { arr.push({ pairId: a.id, type: 'text', title: a.title, desc: a.desc, img: null });
-            arr.push({ pairId: a.id, type: 'image', title: a.title, desc: a.desc, img: 'source/' + a.img }); }); return arr; }
-        renderGrid(cards) { this.grid.innerHTML = '';
-          this.cols = this.determineCols();
-          this.grid.className = `memory-grid cols-${this.cols}`; const root = document.documentElement; const dev = DeviceDetector
-            .getDeviceType(); if (dev === 'mobile' && !DeviceDetector.isLandscape()) { root.style.setProperty('--card-max-width',
-              this.total >= 20 ? '100px' : '120px'); } else { root.style.setProperty('--card-max-width', '170px'); }
-          cards.forEach((c, i) => { const cont = document.createElement('div');
-            cont.className = 'card-container';
-            cont.dataset.pairId = c.pairId;
-            cont.dataset.type = c.type;
-            cont.style.animationDelay = `${i*0.04}s`; const card = document.createElement('div');
-            card.className = 'card'; const back = document.createElement('div');
-            back.innerHTML = createCardBackHTML(); const front = document.createElement('div');
-            front.className = 'card-face card-front'; if (c.type === 'image') { front.innerHTML =
-              `<div class="card-image-wrapper"><img src="${c.img}" alt="${c.desc}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding:16px;color:#888;\\'>📷</div>'"></div>`; } else { front
-                .innerHTML =
-                `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;color:var(--text-dark);padding:8px;text-align:center;"><span style="font-size:1rem;">${c.title}</span><small style="font-weight:500;color:var(--text-soft);margin-top:4px;">${c.desc}</small></div>`; }
-            card.appendChild(back.firstChild);
-            card.appendChild(front);
-            cont.appendChild(card);
-            cont.addEventListener('click', () => this.handleClick(cont));
-            this.grid.appendChild(cont); });
-          updateAllCardLogos(); }
-        flip(cont, up) { cont.querySelector('.card').classList.toggle('flipped', up); }
-        handleClick(cont) { if (!this.active || this.done || this.preview || this.check) return; if (cont.classList.contains(
-            'matched') || cont.querySelector('.card').classList.contains('flipped')) return; if (this.flipped.length >= 2)
-          return;
+
+        /** به‌روزرسانی آمار در UI */
+        updateStats() {
+          this.attemptsEl.textContent = this.attempts.toLocaleString('fa-IR');
+          this.errorsEl.textContent = this.errors.toLocaleString('fa-IR');
+          const left = this.pairsCount - this.matchedPairs.size;
+          this.pairsLeftEl.textContent = left.toLocaleString('fa-IR');
+        }
+
+        /** شروع تایمر */
+        startTimer() {
+          if (this.timerInterval) clearInterval(this.timerInterval);
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
+          this.timerInterval = setInterval(() => {
+            this.timerSeconds++;
+            this.timerEl.textContent = formatTime(this.timerSeconds);
+          }, 1000);
+        }
+
+        /** توقف تایمر */
+        stopTimer() {
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+        }
+
+        /**
+         * تعیین تعداد ستون‌های گرید بر اساس دستگاه، orientation و تعداد کارت
+         * مطابق جدول:
+         * موبایل (عمودی): همه موارد ۴ ستون
+         * تبلت/کامپیوتر: ۱۶→۴, ۲۰→۵, ۲۴→۵
+         */
+        determineGridColumns() {
+          const deviceType = DeviceDetector.getDeviceType();
+          const isLandscape = DeviceDetector.isLandscape();
+
+          // اگر موبایل و landscape باشد، از چیدمان تبلت استفاده کن
+          if (deviceType === 'mobile' && isLandscape) {
+            return this._getTabletDesktopCols();
+          }
+          if (deviceType === 'mobile') {
+            return this._getMobileCols();
+          }
+          // تبلت یا دسکتاپ
+          return this._getTabletDesktopCols();
+        }
+
+        /** چیدمان ستون‌ها برای موبایل عمودی */
+        _getMobileCols() {
+          // همه موارد ۴ ستون
+          return 4;
+        }
+
+        /** چیدمان ستون‌ها برای تبلت و دسکتاپ (و موبایل افقی) */
+        _getTabletDesktopCols() {
+          if (this.totalCards <= 16) return 4;
+          // ۲۰ و ۲۴: ۵ ستون
+          return 5;
+        }
+
+        /**
+         * ساخت آرایه کارت‌ها از فعالیت‌های انتخاب‌شده
+         * @param {Array} activities
+         * @returns {Array} آرایه کارت‌ها
+         */
+        buildCards(activities) {
+          const cards = [];
+          activities.forEach(act => {
+            // کارت متنی (عنوان + توضیح)
+            cards.push({ pairId: act.id, type: 'text', title: act.title, desc: act.desc, img: null });
+            // کارت تصویری
+            cards.push({ pairId: act.id, type: 'image', title: act.title, desc: act.desc, img: 'source/' + act.img });
+          });
+          return cards;
+        }
+
+        /**
+         * رندر کردن کارت‌ها در گرید
+         * @param {Array} cards - آرایه کارت‌ها
+         */
+        renderGrid(cards) {
+          this.grid.innerHTML = '';
+          this.gridCols = this.determineGridColumns();
+          this.grid.className = `memory-grid cols-${this.gridCols}`;
+
+          // تنظیم اندازه کارت‌ها بر اساس دستگاه
+          const deviceType = DeviceDetector.getDeviceType();
+          const root = document.documentElement;
+          if (deviceType === 'mobile' && !DeviceDetector.isLandscape()) {
+            root.style.setProperty('--card-max-width', this.totalCards >= 20 ? '100px' : '120px');
+          } else {
+            root.style.setProperty('--card-max-width', '170px');
+          }
+
+          cards.forEach((c, i) => {
+            const container = document.createElement('div');
+            container.className = 'card-container';
+            container.dataset.pairId = c.pairId;
+            container.dataset.type = c.type;
+            container.dataset.index = i;
+            container.style.animationDelay = `${i * 0.04}s`;
+
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+
+            // پشت کارت – طرح CSS با لوگو و نقاط تزئینی
+            const back = document.createElement('div');
+            back.innerHTML = createCardBackHTML();
+            const backFace = back.firstChild;
+
+            // روی کارت – فقط تصویر (بدون متن)
+            const front = document.createElement('div');
+            front.className = 'card-face card-front';
+            if (c.type === 'image') {
+              front.innerHTML = `
+                <div class="card-image-wrapper">
+                  <img src="${c.img}" alt="${c.desc}" loading="lazy"
+                       onerror="this.parentElement.innerHTML='<div style=\\'padding:16px;color:#888;text-align:center;\\'>📷<br>تصویر<br>در دسترس نیست</div>'">
+                </div>`;
+            } else {
+              // کارت متنی: عنوان و توضیح
+              front.innerHTML = `
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; color:var(--text-dark); padding:8px; text-align:center;">
+                  <span style="font-size:1rem;">${c.title}</span>
+                  <small style="font-weight:500; color:var(--text-soft); margin-top:4px;">${c.desc}</small>
+                </div>`;
+            }
+
+            cardDiv.appendChild(backFace);
+            cardDiv.appendChild(front);
+            container.appendChild(cardDiv);
+            container.addEventListener('click', () => this.handleCardClick(container));
+            this.grid.appendChild(container);
+          });
+
+          // به‌روزرسانی لوگوها پس از رندر
+          updateAllCardLogos();
+        }
+
+        /**
+         * برگرداندن کارت
+         * @param {HTMLElement} container - المان کارت
+         * @param {boolean} showFront - نمایش رو؟
+         */
+        flipCard(container, showFront) {
+          container.querySelector('.card').classList.toggle('flipped', showFront);
+        }
+
+        /**
+         * مدیریت کلیک روی کارت
+         * @param {HTMLElement} container
+         */
+        handleCardClick(container) {
+          if (!this.gameActive || this.gameFinished || this.isPreviewing || this.isChecking) return;
+          if (container.classList.contains('matched') || container.querySelector('.card').classList.contains('flipped')) return;
+          if (this.flippedCards.length >= 2) return;
+
           sfxClick();
-          this.flip(cont, true);
-          this.flipped.push(cont); if (this.flipped.length === 2) { this.attempts++;
+          this.flipCard(container, true);
+          this.flippedCards.push(container);
+
+          if (this.flippedCards.length === 2) {
+            this.attempts++;
             this.updateStats();
-            this.check = true; const [a, b] = this.flipped; if (a.dataset.pairId === b.dataset.pairId && a.dataset.type !== b.dataset
-              .type) { setTimeout(() => { sfxMatch();
-                a.classList.add('matched');
-                b.classList.add('matched');
-                this.matched.add(parseInt(a.dataset.pairId));
-                this.flipped = [];
-                this.check = false;
-                this.updateStats(); if (this.matched.size === this.pairs) this.endGame(); }, 400); } else { this.errors++;
+            this.isChecking = true;
+            const [cardA, cardB] = this.flippedCards;
+            const pairIdA = cardA.dataset.pairId;
+            const pairIdB = cardB.dataset.pairId;
+            const typeA = cardA.dataset.type;
+            const typeB = cardB.dataset.type;
+            const isMatch = (pairIdA === pairIdB && typeA !== typeB);
+
+            if (isMatch) {
+              setTimeout(() => {
+                sfxMatch();
+                cardA.classList.add('matched');
+                cardB.classList.add('matched');
+                this.matchedPairs.add(parseInt(pairIdA));
+                this.flippedCards = [];
+                this.isChecking = false;
+                this.updateStats();
+                if (this.matchedPairs.size === this.pairsCount) {
+                  this.endGame();
+                }
+              }, 400);
+            } else {
+              this.errors++;
               this.updateStats();
-              a.classList.add('wrong-shake');
-              b.classList.add('wrong-shake');
-              setTimeout(() => { sfxError();
-                this.flip(a, false);
-                this.flip(b, false);
-                a.classList.remove('wrong-shake');
-                b.classList.remove('wrong-shake');
-                this.flipped = [];
-                this.check = false; }, 900); } } }
-        startPreview() { this.preview = true;
-          this.active = false; const all = this.grid.querySelectorAll('.card-container');
-          all.forEach(c => this.flip(c, true)); const dur = this.total >= 24 ? 4000 : 2800;
-          setTimeout(() => { all.forEach(c => { if (!c.classList.contains('matched')) this.flip(c, false); });
-            this.preview = false;
-            this.active = true;
-            this.startTimer(); }, dur); }
-        init(pairs) { this.pairs = pairs;
-          this.total = pairs * 2;
+              cardA.classList.add('wrong-shake');
+              cardB.classList.add('wrong-shake');
+              setTimeout(() => {
+                sfxError();
+                this.flipCard(cardA, false);
+                this.flipCard(cardB, false);
+                cardA.classList.remove('wrong-shake');
+                cardB.classList.remove('wrong-shake');
+                this.flippedCards = [];
+                this.isChecking = false;
+              }, 900);
+            }
+          }
+        }
+
+        /** پیش‌نمایش اولیه کارت‌ها */
+        startPreview() {
+          this.isPreviewing = true;
+          this.gameActive = false;
+          const allContainers = this.grid.querySelectorAll('.card-container');
+          allContainers.forEach(c => this.flipCard(c, true));
+          const duration = this.totalCards >= 24 ? 4000 : 2800;
+          setTimeout(() => {
+            allContainers.forEach(c => {
+              if (!c.classList.contains('matched')) {
+                this.flipCard(c, false);
+              }
+            });
+            this.isPreviewing = false;
+            this.gameActive = true;
+            this.startTimer();
+          }, duration);
+        }
+
+        /**
+         * راه‌اندازی بازی جدید
+         * @param {number} pairs - تعداد جفت‌ها
+         */
+        init(pairs) {
+          this.pairsCount = pairs;
+          this.totalCards = pairs * 2;
           this.stopTimer();
-          this.sec = 0;
-          this.timEl.textContent = formatTime(0);
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
           this.attempts = 0;
           this.errors = 0;
-          this.matched.clear();
-          this.flipped = [];
-          this.check = false;
-          this.preview = false;
-          this.active = false;
-          this.done = false;
-          this.updateStats(); const selected = shuffle(allActivities).slice(0, pairs);
-          this.cards = shuffle(this.buildCards(selected));
+          this.matchedPairs.clear();
+          this.flippedCards = [];
+          this.isChecking = false;
+          this.isPreviewing = false;
+          this.gameActive = false;
+          this.gameFinished = false;
+          this.updateStats();
+
+          const selected = shuffleArray(allActivities).slice(0, pairs);
+          this.cards = shuffleArray(this.buildCards(selected));
           this.renderGrid(this.cards);
           this.setupOrientationListener();
-          setTimeout(() => this.startPreview(), 200); }
-        setupOrientationListener() { if (this._orientationHandler) { window.removeEventListener('resize', this._orientationHandler); if (
-            window.matchMedia) { const mq = window.matchMedia('(orientation: portrait)');
-            mq.removeEventListener('change', this._orientationHandler); } }
-          this._orientationHandler = () => { if (this.active || this.preview) { const newCols = this.determineCols(); if (
-                newCols !== this.cols) { this.cols = newCols;
-                this.grid.className = `memory-grid cols-${this.cols}`; const dev = DeviceDetector.getDeviceType(); const root =
-                document.documentElement; if (dev === 'mobile' && !DeviceDetector.isLandscape()) { root.style.setProperty(
-                  '--card-max-width', this.total >= 20 ? '100px' : '120px'); } else { root.style.setProperty('--card-max-width',
-                  '170px'); } } } };
-          window.addEventListener('resize', this._orientationHandler); if (window.matchMedia) { const mq = window.matchMedia(
-            '(orientation: portrait)');
-            mq.addEventListener('change', this._orientationHandler); } }
-        endGame() { this.done = true;
-          this.active = false;
-          this.stopTimer(); if (this._orientationHandler) { window.removeEventListener('resize', this._orientationHandler);
-            this._orientationHandler = null; } const score = Math.max(0, 5000 - this.errors * 70 - this.sec * 4); const isNew =
-          setBest('memBest', score); const best = getBest('memBest'); let msg = 'آفرین! با موفقیت تمام جفت‌ها را پیدا کردید'; if (
-            this.errors === 0) msg = 'دست‌مریزاد! بدون هیچ خطایی همه جفت‌ها را پیدا کردید 🌟'; else if (this.errors <= 3) msg =
-            'عالی بود! با خطاهای بسیار کم موفق شدید 👏';
-          endModal.innerHTML =
-            `<div style="font-size:3rem;">🏆</div><h2>${msg}</h2><div class="big-text">${score.toLocaleString('fa-IR')}</div><div class="detail-row"><span>❌ خطا: <strong>${this.errors.toLocaleString('fa-IR')}</strong></span><span>⏱ زمان: <strong>${formatTime(this.sec)}</strong></span></div><div class="record-badge">${isNew?'🎉 رکورد جدید!':`🏅 بهترین: ${best.toLocaleString('fa-IR')}`}</div><a href="https://formafzar.com/form/omi1j" target="_blank" class="join-link">📝 به ما بپیوندید</a><div class="promo-section"><div class="promo-title">با هیئت آشنا شوید</div><div class="promo-links"><a href="https://zovvar.com" target="_blank" class="promo-link">🌐 وب‌سایت</a><a href="https://eitaa.com/zovvaralzahra" target="_blank" class="promo-link">📱 ایتا</a></div></div><button class="btn-replay" id="btnMemReplay">🔄 بازی دوباره</button>`;
+          setTimeout(() => this.startPreview(), 200);
+        }
+
+        /** شنونده تغییر orientation برای به‌روزرسانی چیدمان */
+        setupOrientationListener() {
+          if (this._orientationHandler) {
+            window.removeEventListener('resize', this._orientationHandler);
+            if (window.matchMedia) {
+              const mq = window.matchMedia('(orientation: portrait)');
+              mq.removeEventListener('change', this._orientationHandler);
+            }
+          }
+          this._orientationHandler = () => {
+            if (this.gameActive || this.isPreviewing) {
+              const newCols = this.determineGridColumns();
+              if (newCols !== this.gridCols) {
+                this.gridCols = newCols;
+                this.grid.className = `memory-grid cols-${this.gridCols}`;
+                // به‌روزرسانی اندازه کارت‌ها
+                const deviceType = DeviceDetector.getDeviceType();
+                const root = document.documentElement;
+                if (deviceType === 'mobile' && !DeviceDetector.isLandscape()) {
+                  root.style.setProperty('--card-max-width', this.totalCards >= 20 ? '100px' : '120px');
+                } else {
+                  root.style.setProperty('--card-max-width', '170px');
+                }
+              }
+            }
+          };
+          window.addEventListener('resize', this._orientationHandler);
+          if (window.matchMedia) {
+            const mq = window.matchMedia('(orientation: portrait)');
+            mq.addEventListener('change', this._orientationHandler);
+          }
+        }
+
+        /** پایان بازی و نمایش مدال */
+        endGame() {
+          this.gameFinished = true;
+          this.gameActive = false;
+          this.stopTimer();
+          if (this._orientationHandler) {
+            window.removeEventListener('resize', this._orientationHandler);
+            this._orientationHandler = null;
+          }
+
+          const score = Math.max(0, 5000 - this.errors * 70 - this.timerSeconds * 4);
+          const isNewBest = setBestScore('memoryBestScore', score);
+          const bestEver = getBestScore('memoryBestScore');
+
+          // پیام‌های محترمانه
+          let winMessage = 'آفرین! با موفقیت تمام جفت‌ها را پیدا کردید';
+          if (this.errors === 0) {
+            winMessage = 'دست‌مریزاد! بدون هیچ خطایی همه جفت‌ها را پیدا کردید 🌟';
+          } else if (this.errors <= 3) {
+            winMessage = 'عالی بود! با خطاهای بسیار کم موفق شدید 👏';
+          }
+
+          endModal.innerHTML = `
+            <div style="font-size:3rem;">🏆</div>
+            <h2>${winMessage}</h2>
+            <div class="big-text">${score.toLocaleString('fa-IR')}</div>
+            <div class="detail-row">
+              <span>❌ خطا: <strong>${this.errors.toLocaleString('fa-IR')}</strong></span>
+              <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
+              <span>🎯 تلاش: <strong>${this.attempts.toLocaleString('fa-IR')}</strong></span>
+            </div>
+            <div class="record-badge">
+              ${isNewBest ? '🎉 رکورد جدید ثبت شد!' : `🏅 بهترین رکورد: ${bestEver.toLocaleString('fa-IR')}`}
+            </div>
+            <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="join-link">📝 به ما بپیوندید</a>
+            <div class="promo-section">
+              <div class="promo-title">📢 با هیئت زوارالزهرا بیشتر آشنا شوید</div>
+              <div class="promo-links">
+                <a href="https://zovvar.com" target="_blank" rel="noopener" class="promo-link">🌐 وب‌سایت هیئت</a>
+                <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="promo-link">📱 کانال ایتا</a>
+              </div>
+            </div>
+            <button class="btn-replay" id="btnMemoryReplay">🔄 بازی دوباره</button>
+          `;
+
           endOverlay.classList.add('active');
           sfxWin();
-          spawnConfetti();
-          document.getElementById('btnMemReplay').addEventListener('click', () => { endOverlay.classList.remove('active');
-            this.init(this.pairs); }); }
-        destroy() { this.stopTimer(); if (this._orientationHandler) { window.removeEventListener('resize', this
-            ._orientationHandler);
-            this._orientationHandler = null; } }
+          spawnConfetti(150);
+
+          document.getElementById('btnMemoryReplay').addEventListener('click', () => {
+            endOverlay.classList.remove('active');
+            this.init(this.pairsCount);
+          });
+        }
+
+        /** پاک‌سازی منابع */
+        destroy() {
+          this.stopTimer();
+          if (this._orientationHandler) {
+            window.removeEventListener('resize', this._orientationHandler);
+            this._orientationHandler = null;
+          }
+        }
       }
 
-      // ==================== Puzzle Game Class ====================
+      // ==============================================================
+      // Puzzle Game Class (کلاس بازی پازل – بدون انیمیشن حرکت)
+      // ==============================================================
       class PuzzleGame {
-        constructor() { this.size = 3;
-          this.empty = 8;
-          this.tiles = [];
-          this.moves = 0;
-          this.sec = 0;
-          this.timer = null;
-          this.active = false;
-          this.done = false;
-          this.img = '';
+        constructor() {
+          this.size = 3;                 // ابعاد (۳، ۴ یا ۵)
+          this.emptyIndex = 8;           // ایندکس خانه خالی (همیشه گوشه پایین-راست)
+          this.tiles = [];               // چیدمان فعلی
+          this.moves = 0;                // تعداد حرکات
+          this.timerSeconds = 0;         // زمان سپری شده
+          this.timerInterval = null;     // اینتروال تایمر
+          this.gameActive = false;       // بازی فعال؟
+          this.gameFinished = false;     // بازی تمام شده؟
+          this.currentImage = '';        // مسیر تصویر فعلی
+
+          // DOM elements
           this.grid = document.getElementById('puzzleGrid');
-          this.timEl = document.getElementById('puzTimer');
-          this.movEl = document.getElementById('puzMoves');
-          this._longTimer = null;
-          this._down = false; }
-        updateStats() { this.movEl.textContent = this.moves.toLocaleString('fa-IR');
-          this.timEl.textContent = formatTime(this.sec); }
-        startTimer() { if (!this.timer) this.timer = setInterval(() => { this.sec++;
-            this.timEl.textContent = formatTime(this.sec); }, 1000); }
-        stopTimer() { if (this.timer) { clearInterval(this.timer);
-            this.timer = null; } }
-        renderGrid() { this.grid.innerHTML = '';
-          this.grid.style.gridTemplateColumns = `repeat(${this.size},1fr)`;
-          this.grid.style.gridTemplateRows = `repeat(${this.size},1fr)`; const total = this.size * this.size; for (let pos = 0; pos <
-            total; pos++) { const cell = document.createElement('div');
+          this.timerEl = document.getElementById('puzTimer');
+          this.movesEl = document.getElementById('puzMoves');
+          this.previewVisible = false;
+          this._longPressTimer = null;
+          this._isPointerDown = false;
+        }
+
+        /** به‌روزرسانی آمار */
+        updateStats() {
+          this.movesEl.textContent = this.moves.toLocaleString('fa-IR');
+          this.timerEl.textContent = formatTime(this.timerSeconds);
+        }
+
+        /** شروع تایمر */
+        startTimer() {
+          if (!this.timerInterval) {
+            this.timerInterval = setInterval(() => {
+              this.timerSeconds++;
+              this.timerEl.textContent = formatTime(this.timerSeconds);
+            }, 1000);
+          }
+        }
+
+        /** توقف تایمر */
+        stopTimer() {
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+        }
+
+        /**
+         * رندر کردن گرید پازل
+         * ابعاد بر اساس this.size
+         */
+        renderGrid() {
+          this.grid.innerHTML = '';
+          this.grid.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
+          this.grid.style.gridTemplateRows = `repeat(${this.size}, 1fr)`;
+
+          const total = this.size * this.size;
+          for (let pos = 0; pos < total; pos++) {
+            const cell = document.createElement('div');
             cell.className = 'puzzle-cell';
-            cell.dataset.pos = pos; const tile = this.tiles[pos]; if (tile === this.empty) { cell.classList.add('empty'); } else { const
-                row = Math.floor(tile / this.size), col = tile % this.size;
-              cell.style.backgroundImage = `url(${this.img})`;
-              cell.style.backgroundSize = `${this.size*100}%`;
-              cell.style.backgroundPosition = `${col*(100/(this.size-1))}% ${row*(100/(this.size-1))}%`;
-              cell.addEventListener('click', () => this.handleCell(cell)); }
-            this.grid.appendChild(cell); } }
-        findEmpty() { return this.tiles.indexOf(this.empty); }
-        isAdjacent(p1, p2) { const r1 = Math.floor(p1 / this.size), c1 = p1 % this.size, r2 = Math.floor(p2 / this.size), c2 = p2 % this
-          .size; return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1; }
-        handleCell(cell) { if (!this.active || this.done) return; const pos = parseInt(cell.dataset.pos); const emp = this.findEmpty(); if (
-            !this.isAdjacent(pos, emp)) return;
+            cell.dataset.pos = pos;
+
+            const tileIndex = this.tiles[pos];
+            if (tileIndex === this.emptyIndex) {
+              cell.classList.add('empty');
+            } else {
+              const row = Math.floor(tileIndex / this.size);
+              const col = tileIndex % this.size;
+              cell.style.backgroundImage = `url(${this.currentImage})`;
+              cell.style.backgroundSize = `${this.size * 100}%`;
+              cell.style.backgroundPosition = `${col * (100 / (this.size - 1))}% ${row * (100 / (this.size - 1))}%`;
+              cell.addEventListener('click', () => this.handleCellClick(cell));
+            }
+            this.grid.appendChild(cell);
+          }
+        }
+
+        /** یافتن ایندکس خانه خالی */
+        findEmpty() {
+          return this.tiles.indexOf(this.emptyIndex);
+        }
+
+        /**
+         * بررسی مجاورت دو خانه (فاصله منهتنی = ۱)
+         * @param {number} p1 - ایندکس اول
+         * @param {number} p2 - ایندکس دوم
+         * @returns {boolean}
+         */
+        isAdjacent(p1, p2) {
+          const r1 = Math.floor(p1 / this.size), c1 = p1 % this.size;
+          const r2 = Math.floor(p2 / this.size), c2 = p2 % this.size;
+          return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+        }
+
+        /**
+         * مدیریت کلیک روی سلول (بدون انیمیشن)
+         * @param {HTMLElement} cell
+         */
+        handleCellClick(cell) {
+          if (!this.gameActive || this.gameFinished) return;
+          const clickedPos = parseInt(cell.dataset.pos);
+          const emptyPos = this.findEmpty();
+          if (!this.isAdjacent(clickedPos, emptyPos)) return;
+
           sfxSlide();
-          [this.tiles[pos], this.tiles[emp]] = [this.tiles[emp], this.tiles[pos]];
+
+          // جابجایی مستقیم داده‌ها
+          [this.tiles[clickedPos], this.tiles[emptyPos]] = [this.tiles[emptyPos], this.tiles[clickedPos]];
           this.moves++;
           this.updateStats();
           this.startTimer();
-          this.renderGrid(); if (this.checkWin()) this.endGame(); }
-        checkWin() { for (let i = 0; i < this.tiles.length; i++) if (this.tiles[i] !== i) return false; return true; }
-        shuffle() { this.tiles = [...Array(this.size * this.size).keys()];
-          this.empty = this.size * this.size - 1; for (let i = 0; i < 200; i++) { const emp = this.findEmpty(); const moves = []; const
-              r = Math.floor(emp / this.size), c = emp % this.size; if (r > 0) moves.push(emp - this.size); if (r < this.size - 1)
-              moves.push(emp + this.size); if (c > 0) moves.push(emp - 1); if (c < this.size - 1) moves.push(emp + 1); const t = moves[
-                Math.floor(Math.random() * moves.length)
-              ];
-            [this.tiles[emp], this.tiles[t]] = [this.tiles[t], this.tiles[emp]]; } }
-        init(size) { this.size = size;
-          this.empty = size * size - 1;
+
+          // رندر مجدد گرید
+          this.renderGrid();
+
+          // بررسی برد
+          if (this.checkWin()) {
+            this.endGame();
+          }
+        }
+
+        /** بررسی وضعیت برد */
+        checkWin() {
+          for (let i = 0; i < this.tiles.length; i++) {
+            if (this.tiles[i] !== i) return false;
+          }
+          return true;
+        }
+
+        /** درهم‌ریزی اولیه با حرکات معتبر (تضمین حل‌پذیری) */
+        shuffle() {
+          // حالت حل شده
+          this.tiles = Array.from({ length: this.size * this.size }, (_, i) => i);
+          this.emptyIndex = this.size * this.size - 1;
+
+          // تعداد حرکات تصادفی
+          const shuffleMoves = this.size * 40;
+          for (let i = 0; i < shuffleMoves; i++) {
+            const emptyPos = this.findEmpty();
+            const possibleMoves = [];
+            const r = Math.floor(emptyPos / this.size);
+            const c = emptyPos % this.size;
+
+            if (r > 0) possibleMoves.push(emptyPos - this.size);
+            if (r < this.size - 1) possibleMoves.push(emptyPos + this.size);
+            if (c > 0) possibleMoves.push(emptyPos - 1);
+            if (c < this.size - 1) possibleMoves.push(emptyPos + 1);
+
+            const target = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            [this.tiles[emptyPos], this.tiles[target]] = [this.tiles[target], this.tiles[emptyPos]];
+          }
+        }
+
+        /**
+         * راه‌اندازی بازی جدید
+         * @param {number} size - ابعاد (۳، ۴ یا ۵)
+         */
+        init(size) {
+          this.size = size;
+          this.emptyIndex = size * size - 1;
           this.stopTimer();
-          this.sec = 0;
+          this.timerSeconds = 0;
           this.moves = 0;
-          this.active = true;
-          this.done = false;
-          this.updateStats(); const act = allActivities[Math.floor(Math.random() * allActivities.length)];
-          this.img = 'source/' + act.img;
-          previewImage.src = this.img;
+          this.gameActive = true;
+          this.gameFinished = false;
+          this.updateStats();
+
+          const randomAct = allActivities[Math.floor(Math.random() * allActivities.length)];
+          this.currentImage = 'source/' + randomAct.img;
+          previewImage.src = this.currentImage;
+
           this.shuffle();
           this.renderGrid();
-          previewOverlay.classList.remove('active'); }
-        endGame() { this.active = false;
-          this.done = true;
-          this.stopTimer(); const key = `puzBest_${this.size}`; const best = getBest(key); let isNew = false; if (best === 0 || this
-            .sec < best) { setBest(key, this.sec);
-            isNew = true; } const disp = isNew ? this.sec : best; let msg = 'تبریک! تصویر را به درستی کامل کردید 🎉'; if (this.moves <=
-            this.size * 3) msg = 'شگفت‌انگیز! با کمترین حرکت تصویر را کامل کردید 🌟'; else if (this.moves <= this.size * 6) msg =
-            'بسیار خوب! تصویر را با موفقیت کامل کردید 👏';
-          endModal.innerHTML =
-            `<div style="font-size:3rem;">🧩</div><h2>${msg}</h2><div class="detail-row"><span>⏱ ${formatTime(this.sec)}</span><span>🔄 ${this.moves.toLocaleString('fa-IR')}</span></div><div class="record-badge">${isNew?'🎉 رکورد جدید!':`🏅 بهترین: ${formatTime(disp)}`}</div><a href="https://formafzar.com/form/omi1j" target="_blank" class="join-link">📝 به ما بپیوندید</a><div class="promo-section"><div class="promo-title">با هیئت آشنا شوید</div><div class="promo-links"><a href="https://zovvar.com" target="_blank" class="promo-link">🌐 وب‌سایت</a><a href="https://eitaa.com/zovvaralzahra" target="_blank" class="promo-link">📱 ایتا</a></div></div><button class="btn-replay" id="btnPuzReplay">🔄 بازی دوباره</button>`;
+          this.hidePreview();
+        }
+
+        /** پایان بازی */
+        endGame() {
+          this.gameActive = false;
+          this.gameFinished = true;
+          this.stopTimer();
+
+          const recordKey = `puzBest_${this.size}`;
+          const bestTime = getBestScore(recordKey);
+          let isNewBest = false;
+          if (bestTime === 0 || this.timerSeconds < bestTime) {
+            setBestScore(recordKey, this.timerSeconds);
+            isNewBest = true;
+          }
+          const displayBest = isNewBest ? this.timerSeconds : bestTime;
+
+          // پیام‌های محترمانه
+          let winMessage = 'تبریک! تصویر را به درستی کامل کردید 🎉';
+          if (this.moves <= this.size * 3) {
+            winMessage = 'شگفت‌انگیز! با کمترین حرکت تصویر را کامل کردید 🌟';
+          } else if (this.moves <= this.size * 6) {
+            winMessage = 'بسیار خوب! تصویر را با موفقیت کامل کردید 👏';
+          }
+
+          endModal.innerHTML = `
+            <div style="font-size:3rem;">🧩</div>
+            <h2>${winMessage}</h2>
+            <div class="detail-row">
+              <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
+              <span>🔄 حرکات: <strong>${this.moves.toLocaleString('fa-IR')}</strong></span>
+            </div>
+            <div class="record-badge">
+              ${isNewBest ? '🎉 رکورد جدید!' : `🏅 بهترین زمان: ${formatTime(displayBest)}`}
+            </div>
+            <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="join-link">📝 به ما بپیوندید</a>
+            <div class="promo-section">
+              <div class="promo-title">📢 با هیئت زوارالزهرا بیشتر آشنا شوید</div>
+              <div class="promo-links">
+                <a href="https://zovvar.com" target="_blank" rel="noopener" class="promo-link">🌐 وب‌سایت هیئت</a>
+                <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="promo-link">📱 کانال ایتا</a>
+              </div>
+            </div>
+            <button class="btn-replay" id="btnPuzzleReplay">🔄 بازی دوباره</button>
+          `;
+
           endOverlay.classList.add('active');
           sfxWin();
-          spawnConfetti();
-          document.getElementById('btnPuzReplay').addEventListener('click', () => { endOverlay.classList.remove('active');
-            this.init(this.size); }); }
-        showPreview() { previewOverlay.classList.add('active'); }
-        hidePreview() { previewOverlay.classList.remove('active'); }
-        setupPreview() { puzzlePreviewBtn.addEventListener('mouseenter', () => { if (!this._down) this.showPreview(); });
-          puzzlePreviewBtn.addEventListener('mouseleave', () => { if (!this._down) this.hidePreview(); }); const start = (e) => { e
-            .preventDefault();
-            this._down = true;
-            this._longTimer = setTimeout(() => this.showPreview(), 500); }; const cancel = () => { this._down = false; if (this._longTimer) {
-              clearTimeout(this._longTimer);
-              this._longTimer = null; } this.hidePreview(); };
-          puzzlePreviewBtn.addEventListener('touchstart', start, { passive: false });
-          puzzlePreviewBtn.addEventListener('touchend', cancel);
-          puzzlePreviewBtn.addEventListener('touchcancel', cancel);
-          puzzlePreviewBtn.addEventListener('mousedown', start);
-          puzzlePreviewBtn.addEventListener('mouseup', cancel);
-          previewOverlay.addEventListener('click', () => this.hidePreview()); }
+          spawnConfetti(100);
+
+          document.getElementById('btnPuzzleReplay').addEventListener('click', () => {
+            endOverlay.classList.remove('active');
+            this.init(this.size);
+          });
+        }
+
+        // ---------- پیش‌نمایش تصویر ----------
+        showPreview() {
+          previewOverlay.classList.add('active');
+          this.previewVisible = true;
+        }
+
+        hidePreview() {
+          previewOverlay.classList.remove('active');
+          this.previewVisible = false;
+        }
+
+        /** تنظیم رویدادهای دکمه پیش‌نمایش (hover و long-press) */
+        setupPreviewButton() {
+          puzzlePreviewBtn.addEventListener('mouseenter', () => {
+            if (!this._isPointerDown) this.showPreview();
+          });
+          puzzlePreviewBtn.addEventListener('mouseleave', () => {
+            if (!this._isPointerDown) this.hidePreview();
+          });
+
+          const startLongPress = (e) => {
+            e.preventDefault();
+            this._isPointerDown = true;
+            this._longPressTimer = setTimeout(() => { this.showPreview(); }, 500);
+          };
+          const cancelLongPress = () => {
+            this._isPointerDown = false;
+            if (this._longPressTimer) {
+              clearTimeout(this._longPressTimer);
+              this._longPressTimer = null;
+            }
+            if (this.previewVisible) this.hidePreview();
+          };
+
+          puzzlePreviewBtn.addEventListener('touchstart', startLongPress, { passive: false });
+          puzzlePreviewBtn.addEventListener('touchend', cancelLongPress);
+          puzzlePreviewBtn.addEventListener('touchcancel', cancelLongPress);
+          puzzlePreviewBtn.addEventListener('mousedown', startLongPress);
+          puzzlePreviewBtn.addEventListener('mouseup', cancelLongPress);
+          puzzlePreviewBtn.addEventListener('mouseleave', cancelLongPress);
+
+          previewOverlay.addEventListener('click', () => this.hidePreview());
+        }
       }
 
-      // ==================== Initialize ====================
+      // ==============================================================
+      // Initialize Games (ایجاد نمونه‌های بازی)
+      // ==============================================================
       const memoryGame = new MemoryGame();
       const puzzleGame = new PuzzleGame();
-      puzzleGame.setupPreview();
+      puzzleGame.setupPreviewButton();
 
-      function populateMemorySelectors() { memorySelectBtns.innerHTML = ''; [{ pairs: 8, label: '۸ جفت (۱۶ کارت)' }, { pairs: 10,
-          label: '۱۰ جفت (۲۰ کارت)' }, { pairs: 12, label: '۱۲ جفت (۲۴ کارت)' }].forEach(o => { const b = document.createElement(
-          'button');
-        b.className = 'selector-btn';
-        b.textContent = o.label;
-        b.addEventListener('click', () => { showScreen('memory');
-          memoryGame.init(o.pairs); });
-        memorySelectBtns.appendChild(b); }); }
+      // ==============================================================
+      // Populate Selectors (پر کردن دکمه‌های انتخاب)
+      // ==============================================================
 
-      function populatePuzzleSelectors() { puzzleSelectBtns.innerHTML = ''; [3, 4, 5].forEach(s => { const b = document.createElement(
-          'button');
-        b.className = 'selector-btn';
-        b.textContent = `${s}×${s}`;
-        b.addEventListener('click', () => { showScreen('puzzle');
-          puzzleGame.init(s); });
-        puzzleSelectBtns.appendChild(b); }); }
+      /** پر کردن دکمه‌های انتخاب تعداد کارت حافظه (فقط ۸، ۱۰، ۱۲ جفت) */
+      function populateMemorySelectors() {
+        memorySelectBtns.innerHTML = '';
+        const options = [
+          { pairs: 8, label: '۸ جفت (۱۶ کارت)' },
+          { pairs: 10, label: '۱۰ جفت (۲۰ کارت)' },
+          { pairs: 12, label: '۱۲ جفت (۲۴ کارت)' }
+        ];
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'selector-btn';
+          btn.textContent = opt.label;
+          btn.addEventListener('click', () => {
+            showScreen('memory');
+            memoryGame.init(opt.pairs);
+          });
+          memorySelectBtns.appendChild(btn);
+        });
+      }
 
-      btnGoMemory.addEventListener('click', () => { initAudio();
+      /** پر کردن دکمه‌های انتخاب ابعاد پازل */
+      function populatePuzzleSelectors() {
+        puzzleSelectBtns.innerHTML = '';
+        [3, 4, 5].forEach(size => {
+          const btn = document.createElement('button');
+          btn.className = 'selector-btn';
+          btn.textContent = `${size}×${size}`;
+          btn.addEventListener('click', () => {
+            showScreen('puzzle');
+            puzzleGame.init(size);
+          });
+          puzzleSelectBtns.appendChild(btn);
+        });
+      }
+
+      // ==============================================================
+      // Event Listeners (رویدادهای اصلی)
+      // ==============================================================
+      btnGoMemory.addEventListener('click', () => {
+        initAudioContext();
         populateMemorySelectors();
-        showScreen('memorySelect'); });
-      btnGoPuzzle.addEventListener('click', () => { initAudio();
+        showScreen('memorySelect');
+      });
+
+      btnGoPuzzle.addEventListener('click', () => {
+        initAudioContext();
         populatePuzzleSelectors();
-        showScreen('puzzleSelect'); });
+        showScreen('puzzleSelect');
+      });
+
       btnMemorySelectBack.addEventListener('click', () => showScreen('home'));
       btnPuzzleSelectBack.addEventListener('click', () => showScreen('home'));
-      btnMemoryBack.addEventListener('click', () => { memoryGame.destroy();
-        showScreen('home'); });
-      btnPuzzleBack.addEventListener('click', () => { puzzleGame.stopTimer();
-        showScreen('home'); });
-      endOverlay.addEventListener('click', e => { if (e.target === endOverlay) endOverlay.classList.remove('active'); });
-      document.body.addEventListener('click', initAudio, { once: true });
-      document.body.addEventListener('touchstart', initAudio, { once: true });
+      btnMemoryBack.addEventListener('click', () => { memoryGame.destroy(); showScreen('home'); });
+      btnPuzzleBack.addEventListener('click', () => { puzzleGame.stopTimer(); showScreen('home'); });
 
-      function handleOrientationChange() { if (!screens.memorySelect.classList.contains('hidden')) populateMemorySelectors(); if (!screens
-          .puzzleSelect.classList.contains('hidden')) populatePuzzleSelectors(); }
-      if (window.matchMedia) { window.matchMedia('(orientation: portrait)').addEventListener('change', handleOrientationChange); }
+      // بستن مدال با کلیک روی پس‌زمینه
+      endOverlay.addEventListener('click', (e) => {
+        if (e.target === endOverlay) endOverlay.classList.remove('active');
+      });
+
+      // فعال‌سازی AudioContext با اولین تعامل کاربر
+      document.body.addEventListener('click', initAudioContext, { once: true });
+      document.body.addEventListener('touchstart', initAudioContext, { once: true });
+
+      // ==============================================================
+      // Orientation Change Handler (برای به‌روزرسانی احتمالی)
+      // ==============================================================
+      function handleOrientationChange() {
+        // اگر در صفحه انتخاب حافظه هستیم، دکمه‌ها را دوباره پر کنیم
+        if (!screens.memorySelect.classList.contains('hidden')) {
+          populateMemorySelectors();
+        }
+        if (!screens.puzzleSelect.classList.contains('hidden')) {
+          populatePuzzleSelectors();
+        }
+      }
+      if (window.matchMedia) {
+        const mqPortrait = window.matchMedia('(orientation: portrait)');
+        mqPortrait.addEventListener('change', handleOrientationChange);
+      }
       window.addEventListener('resize', handleOrientationChange);
 
-      function initApp() { handleOrientationChange();
+      // ==============================================================
+      // Initial Setup (راه‌اندازی نهایی)
+      // ==============================================================
+      function initializeApp() {
+        handleOrientationChange();
         showScreen('home');
-        updateMusicBtn();
-        startMusic(); }
-      initApp();
+        updateMusicButton();
+        startMusic();
+        console.log('[App] نسخه 14.0 - دستگاه:', DeviceDetector.getDeviceType(), '| جهت:', DeviceDetector.getOrientation(), '| تم تاریک:', isDarkMode() ? 'فعال' : 'غیرفعال');
+      }
+
+      initializeApp();
     })();
   </script>
 </body>
