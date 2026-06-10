@@ -7,17 +7,18 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 14.0 — تاریخ: 2026-06-10
+    نسخه: 15.0 — تاریخ: 2026-06-10
     ویژگی‌ها:
       - صفحه خانه با دو دکمه بازی و لینک‌های ارتباطی
       - بازی حافظه با انتخاب 16، 20، 24 کارت (8، 10، 12 جفت)
       - تم تاریک خودکار بر اساس تنظیمات سیستم
-      - پشت کارت جدید با SVG هندسی + لوگوی بزرگ هیئت
+      - پشت کارت با تصاویر back1.jpg (تاریک) و back2.jpg (روشن)
       - فونت Yekan.ttf از پوشه source
       - موسیقی پس‌زمینه با پخش خودکار (Autoplay)
       - پازل ۳×۳، ۴×۴، ۵×۵ (بدون انیمیشن حرکت)
       - پیام‌های برد محترمانه
       - افکت‌های صوتی، ذرات شادی، رکوردها
+      - حذف کامل SVG و توضیحات متنی از روی کارت‌ها
       - حداقل ۱۵۰۰ خط کد تمیز و بدون باگ
     ============================================================
   -->
@@ -51,7 +52,6 @@
       --card-aspect-ratio: 4 / 5;
       --card-max-width: 170px;
       /* رنگ‌های اختصاصی کارت */
-      --card-back-bg: #f0e8d8; /* fallback */
       --card-back-border: #2a7044;
       --card-front-bg: linear-gradient(160deg, #fffefb, #fdf8ed);
       --card-front-border: #e8dbb8;
@@ -107,7 +107,6 @@
         --gold-pale: #2a2a3e;
         --maroon: #c9a84c;
         --maroon-light: #8b6508;
-        --card-back-bg: #1a1a2e;
         --card-back-border: #6b7c6b;
         --card-front-bg: linear-gradient(160deg, #2a2a3e, #1a1a2e);
         --card-front-border: #3a3a4e;
@@ -413,11 +412,9 @@
     }
 
     /* ================================================================
-       پشت کارت – SVG هندسی به عنوان background-image
-       (تعویض با مدیا کوئری برای تم تاریک)
+       پشت کارت – تصاویر back1.jpg و back2.jpg
        ================================================================ */
     .card-back {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 200 250'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='%23d4af37' stroke-width='0.5' opacity='0.3'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%23d4af37' opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='200' height='250' fill='%23fdf8f0' rx='16'/%3E%3Crect x='6' y='6' width='188' height='238' fill='none' stroke='%23d4af37' stroke-width='4' rx='12'/%3E%3Crect x='14' y='14' width='172' height='222' fill='url(%23grid)' rx='8' opacity='0.8'/%3E%3Crect x='14' y='14' width='172' height='222' fill='none' stroke='%23d4af37' stroke-width='1.5' rx='8' opacity='0.6'/%3E%3Cimage x='40' y='65' width='120' height='120' xlink:href='source/logo2.png'/%3E%3C/svg%3E");
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -426,15 +423,22 @@
       position: relative;
     }
 
-    /* حالت تاریک: background-image با لوگوی logo1.png */
+    /* تم روشن: back2.jpg */
+    @media (prefers-color-scheme: light) {
+      .card-back {
+        background-image: url('source/back2.jpg');
+      }
+    }
+
+    /* تم تاریک: back1.jpg */
     @media (prefers-color-scheme: dark) {
       .card-back {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 200 250'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='%23c9a84c' stroke-width='0.5' opacity='0.25'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%23c9a84c' opacity='0.35'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='200' height='250' fill='%231a1a2e' rx='16'/%3E%3Crect x='6' y='6' width='188' height='238' fill='none' stroke='%238b6508' stroke-width='4' rx='12'/%3E%3Crect x='14' y='14' width='172' height='222' fill='url(%23grid)' rx='8' opacity='0.7'/%3E%3Crect x='14' y='14' width='172' height='222' fill='none' stroke='%238b6508' stroke-width='1.5' rx='8' opacity='0.5'/%3E%3Cimage x='40' y='65' width='120' height='120' xlink:href='source/logo1.png'/%3E%3C/svg%3E");
+        background-image: url('source/back1.jpg');
       }
     }
 
     /* ================================================================
-       روی کارت – فقط تصویر
+       روی کارت – فقط تصویر (بدون متن)
        ================================================================ */
     .card-front {
       background: var(--card-front-bg);
@@ -685,7 +689,6 @@
   <div id="endOverlay" class="overlay"><div id="endModal" class="modal"></div></div>
   <div id="confettiContainer" class="confetti-wrap"></div>
   <button id="musicToggle" class="music-toggle">🔊</button>
-  <!-- المان صوتی پس‌زمینه با autoplay برای پخش خودکار -->
   <audio id="bgMusic" src="source/mc.mp3" loop autoplay preload="auto"></audio>
 
   <script>
@@ -771,7 +774,7 @@
       function sfxSlide(){ initAudio(); tone(350,0.08,'sine',0.15); }
 
       // ==============================================================
-      // Music Control (Autoplay با تلاش اولیه)
+      // Music Control (Autoplay)
       // ==============================================================
       let musicPlaying = false;
       bgMusic.volume = 0.4;
@@ -788,7 +791,6 @@
         }).catch(() => {
           musicPlaying = false;
           updateMusicBtn();
-          // اگر autoplay مسدود شد، با اولین کلیک کاربر پخش شود
           const resumeOnInteraction = () => {
             initAudio();
             bgMusic.play().then(() => {
@@ -866,8 +868,10 @@
         buildCards(acts) {
           const arr=[];
           acts.forEach(a=>{
-            arr.push({pairId:a.id, type:'text', title:a.title, desc:a.desc, img:null});
-            arr.push({pairId:a.id, type:'image', title:a.title, desc:a.desc, img:'source/'+a.img});
+            // کارت تصویری (همان تصویر اصلی)
+            arr.push({pairId:a.id, type:'image', img:'source/'+a.img});
+            // کارت متنی (فقط یک ایموجی یا آیکون ساده بدون متن)
+            arr.push({pairId:a.id, type:'text', img:null});
           });
           return arr;
         }
@@ -888,15 +892,15 @@
             cont.dataset.pairId=c.pairId; cont.dataset.type=c.type;
             cont.style.animationDelay=`${i*0.04}s`;
             const card=document.createElement('div'); card.className='card';
-            // پشت کارت (استایل background-image از CSS گرفته می‌شود)
+            // پشت کارت (تصویر بک‌گراند توسط CSS)
             const back=document.createElement('div');
             back.className='card-face card-back';
-            // روی کارت
+            // روی کارت (فقط تصویر یا ایموجی)
             const front=document.createElement('div'); front.className='card-face card-front';
             if(c.type==='image'){
-              front.innerHTML=`<div class="card-image-wrapper"><img src="${c.img}" alt="${c.desc}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=padding:16px;color:#888;>تصویر</div>'"></div>`;
+              front.innerHTML=`<div class="card-image-wrapper"><img src="${c.img}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div style=padding:16px;color:#888;>📷</div>'"></div>`;
             } else {
-              front.innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--text-dark);padding:8px;text-align:center;">${c.title}<br><small style="font-weight:500;color:var(--text-soft);">${c.desc}</small></div>`;
+              front.innerHTML=`<div style="flex:1; display:flex; align-items:center; justify-content:center; font-size:2.5rem;">🏴</div>`;
             }
             card.appendChild(back); card.appendChild(front);
             cont.appendChild(card);
@@ -1105,7 +1109,7 @@
       // Initial setup
       showScreen('home');
       updateMusicBtn();
-      tryAutoplay(); // تلاش برای پخش خودکار موسیقی
+      tryAutoplay();
     })();
   </script>
 </body>
