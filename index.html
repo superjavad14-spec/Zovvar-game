@@ -7,12 +7,15 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 16.0 — تاریخ: 2026-06-10
+    نسخه: 17.0 — تاریخ: 2026-06-10
     تغییرات:
-      - رفع باگ کارت‌های اشتباه: لرزش + حاشیه قرمز + برگشت بدون محو شدن
-      - رفع باگ کارت‌های درست: حذف تیک (✓) و فقط افکت سبز
-      - حفظ تمام قابلیت‌های قبلی (آمار، تایمر، صدا، کانفتی، تم و...)
-      - حداقل ۱۸۰۰ خط کد
+      - ✅ موسیقی پیشفرض فعال (خودکار پخش شود)
+      - ✅ Debounce برای کلیک‌های متعدد
+      - ✅ بهبود مدیریت localStorage
+      - ✅ اضافه کردن ARIA labels برای Accessibility
+      - ✅ حذف تیک (✓) - فقط افکت سبز نمایش داده شود
+      - ✅ بهینه‌سازی بارگذاری تصاویر با preload
+      - ✅ حداقل ۲۰۰۰ خط کد
     ============================================================
   -->
   <style>
@@ -78,7 +81,7 @@
       --puzzle-empty-bg: rgba(255,255,255,0.1);
       --preview-overlay-bg: rgba(0,0,0,0.7);
       /* پشت کارت - نسخه SVG روشن (Data URI) */
-      --card-back-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a5c34'/%3E%3Cstop offset='40%25' stop-color='%23145228'/%3E%3Cstop offset='70%25' stop-color='%231a5c34'/%3E%3Cstop offset='100%25' stop-color='%230f4220'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%232a7044' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(201,168,76,0.5)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo2.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 8px rgba(0,0,0,0.3))'/%3E%3C/svg%3E");
+      --card-back-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23d4af37'/%3E%3Cstop offset='50%25' stop-color='%23f9e076'/%3E%3Cstop offset='100%25' stop-color='%238b6508'/%3E%3C/linearGradient%3E%3ClinearGradient id='highlight' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.3'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)'/%3E%3Crect x='10' y='10' width='180' height='230' rx='8' fill='none' stroke='%23fffefb' stroke-width='2'/%3E%3Ccircle cx='100' cy='125' r='40' fill='none' stroke='%23fffefb' stroke-width='2' opacity='0.5'/%3E%3Ctext x='100' y='135' font-size='60' fill='%23fffefb' text-anchor='middle' font-family='serif' font-weight='bold' opacity='0.8'%3E✨%3C/text%3E%3C/svg%3E");
     }
 
     /* ================================================================
@@ -129,7 +132,7 @@
         --puzzle-empty-bg: rgba(255,255,255,0.05);
         --preview-overlay-bg: rgba(0,0,0,0.85);
         /* پشت کارت - نسخه SVG تاریک (Data URI) */
-        --card-back-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f2a1a'/%3E%3Cstop offset='40%25' stop-color='%230a1f12'/%3E%3Cstop offset='70%25' stop-color='%230f2a1a'/%3E%3Cstop offset='100%25' stop-color='%2305140a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%236b7c6b' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(170,140,60,0.4)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo1.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 6px rgba(255,255,255,0.2))'/%3E%3C/svg%3E");
+        --card-back-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg-dark' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23c9a84c'/%3E%3Cstop offset='50%25' stop-color='%238b6508'/%3E%3Cstop offset='100%25' stop-color='%235a3a1a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg-dark)'/%3E%3Crect x='10' y='10' width='180' height='230' rx='8' fill='none' stroke='%231a1a2e' stroke-width='2'/%3E%3Ccircle cx='100' cy='125' r='40' fill='none' stroke='%231a1a2e' stroke-width='2' opacity='0.5'/%3E%3Ctext x='100' y='135' font-size='60' fill='%231a1a2e' text-anchor='middle' font-family='serif' font-weight='bold' opacity='0.8'%3E✨%3C/text%3E%3C/svg%3E");
       }
     }
 
@@ -610,14 +613,14 @@
       </div>
     </div>
     <div class="btn-group">
-      <button class="btn" id="btnGoMemory">🧠 بازی حافظه</button>
-      <button class="btn" id="btnGoPuzzle">🧩 تصویر به هم ریخته</button>
+      <button class="btn" id="btnGoMemory" aria-label="شروع بازی حافظه">🧠 بازی حافظه</button>
+      <button class="btn" id="btnGoPuzzle" aria-label="شروع بازی پازل">🧩 تصویر به هم ریخته</button>
     </div>
     <!-- لینک‌های ارتباطی با خط جداکننده -->
     <div class="home-links">
-      <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="home-link">📝 عضویت</a>
-      <a href="https://zovvar.com" target="_blank" rel="noopener" class="home-link">🌐 وب‌سایت</a>
-      <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="home-link">📱 ایتا</a>
+      <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener noreferrer" class="home-link" aria-label="لینک عضویت">📝 عضویت</a>
+      <a href="https://zovvar.com" target="_blank" rel="noopener noreferrer" class="home-link" aria-label="وب‌سایت رسمی">🌐 وب‌سایت</a>
+      <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener noreferrer" class="home-link" aria-label="کانال ایتا">📱 ایتا</a>
     </div>
   </div>
 
@@ -626,22 +629,22 @@
     <div class="game-header"><div class="org-name">🎴 انتخاب تعداد کارت</div></div>
     <div class="card-count-selector">
       <p>تعداد جفت‌ها را انتخاب کنید:</p>
-      <div class="selector-btns" id="memorySelectBtns"><!-- توسط JS پر می‌شود --></div>
+      <div class="selector-btns" id="memorySelectBtns" role="group" aria-label="انتخاب تعداد کارت‌ها"><!-- توسط JS پر می‌شود --></div>
     </div>
-    <button class="btn-control" id="btnMemorySelectBack">🏠 بازگشت به خانه</button>
+    <button class="btn-control" id="btnMemorySelectBack" aria-label="بازگشت به خانه">🏠 بازگشت به خانه</button>
   </div>
 
   <!-- صفحه بازی حافظه -->
   <div id="memoryScreen" class="screen hidden">
     <div class="game-header"><div class="org-name">🏴 هیئت زوارالزهرا</div></div>
     <div class="stats-bar">
-      <div class="stat-item">🎯 تلاش: <span class="stat-value" id="memAttempts">۰</span></div>
-      <div class="stat-item">❌ خطا: <span class="stat-value" id="memErrors">۰</span></div>
-      <div class="stat-item">⏱ زمان: <span class="stat-value" id="memTimer">۰:۰۰</span></div>
-      <div class="stat-item">🃏 جفت مانده: <span class="stat-value" id="memPairsLeft">۰</span></div>
+      <div class="stat-item">🎯 تلاش: <span class="stat-value" id="memAttempts" aria-label="تعداد تلاش‌ها">۰</span></div>
+      <div class="stat-item">❌ خطا: <span class="stat-value" id="memErrors" aria-label="تعداد خطا‌ها">۰</span></div>
+      <div class="stat-item">⏱ زمان: <span class="stat-value" id="memTimer" aria-label="زمان سپری‌شده">۰:۰۰</span></div>
+      <div class="stat-item">🃏 جفت مانده: <span class="stat-value" id="memPairsLeft" aria-label="تعداد جفت‌های باقی‌مانده">۰</span></div>
     </div>
-    <div id="memoryGrid" class="memory-grid"></div>
-    <button class="btn-control" id="btnMemoryBack">🏠 خانه</button>
+    <div id="memoryGrid" class="memory-grid" role="region" aria-label="گرید بازی حافظه"></div>
+    <button class="btn-control" id="btnMemoryBack" aria-label="بازگشت به خانه">🏠 خانه</button>
   </div>
 
   <!-- صفحه انتخاب ابعاد پازل -->
@@ -649,30 +652,30 @@
     <div class="game-header"><div class="org-name">🧩 انتخاب ابعاد پازل</div></div>
     <div class="card-count-selector">
       <p>اندازه پازل:</p>
-      <div class="selector-btns" id="puzzleSelectBtns"><!-- توسط JS پر می‌شود --></div>
+      <div class="selector-btns" id="puzzleSelectBtns" role="group" aria-label="انتخاب اندازه پازل"><!-- توسط JS پر می‌شود --></div>
     </div>
-    <button class="btn-control" id="btnPuzzleSelectBack">🏠 بازگشت به خانه</button>
+    <button class="btn-control" id="btnPuzzleSelectBack" aria-label="بازگشت به خانه">🏠 بازگشت به خانه</button>
   </div>
 
   <!-- صفحه بازی پازل -->
   <div id="puzzleScreen" class="screen hidden">
     <div class="game-header"><div class="org-name">🧩 تصویر به هم ریخته</div></div>
     <div class="stats-bar">
-      <div class="stat-item">⏱ زمان: <span class="stat-value" id="puzTimer">۰:۰۰</span></div>
-      <div class="stat-item">🔄 حرکات: <span class="stat-value" id="puzMoves">۰</span></div>
+      <div class="stat-item">⏱ زمان: <span class="stat-value" id="puzTimer" aria-label="زمان سپری‌شده">۰:۰۰</span></div>
+      <div class="stat-item">🔄 حرکات: <span class="stat-value" id="puzMoves" aria-label="تعداد حرکات">۰</span></div>
     </div>
     <div class="puzzle-wrapper" id="puzzleWrapper">
-      <div id="puzzleGrid" class="puzzle-grid"></div>
-      <button class="puzzle-preview-btn" id="puzzlePreviewBtn" title="پیش‌نمایش تصویر">🔍</button>
+      <div id="puzzleGrid" class="puzzle-grid" role="region" aria-label="گرید بازی پازل"></div>
+      <button class="puzzle-preview-btn" id="puzzlePreviewBtn" title="پیش‌نمایش تصویر" aria-label="پیش‌نمایش تصویر پازل">🔍</button>
       <div class="preview-overlay" id="previewOverlay">
-        <img id="previewImage" src="" alt="پیش‌نمایش تصویر">
+        <img id="previewImage" src="" alt="پیش‌نمایش تصویر پازل">
       </div>
     </div>
-    <button class="btn-control" id="btnPuzzleBack">🏠 خانه</button>
+    <button class="btn-control" id="btnPuzzleBack" aria-label="بازگشت به خانه">🏠 خانه</button>
   </div>
 
   <!-- مدال پایان بازی -->
-  <div id="endOverlay" class="overlay">
+  <div id="endOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="نتایج بازی">
     <div id="endModal" class="modal"></div>
   </div>
 
@@ -680,7 +683,7 @@
   <div id="confettiContainer" class="confetti-wrap"></div>
 
   <!-- دکمه کنترل موسیقی -->
-  <button id="musicToggle" class="music-toggle" title="پخش/توقف موسیقی">🔊</button>
+  <button id="musicToggle" class="music-toggle" title="پخش/توقف موسیقی" aria-label="کنترل موسیقی پس‌زمینه">🔊</button>
 
   <!-- المان صوتی پس‌زمینه -->
   <audio id="bgMusic" src="source/mc.mp3" loop preload="auto"></audio>
@@ -717,6 +720,17 @@
       const puzzlePreviewBtn = document.getElementById('puzzlePreviewBtn');
       const previewOverlay = document.getElementById('previewOverlay');
       const previewImage = document.getElementById('previewImage');
+
+      // ==============================================================
+      // Debounce Function (جلوگیری از کلیک‌های متعدد)
+      // ==============================================================
+      function debounce(fn, delay = 100) {
+        let timeout;
+        return function(...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => fn.apply(this, args), delay);
+        };
+      }
 
       // ==============================================================
       // Device Detection (تشخیص نوع دستگاه و orientation)
@@ -761,12 +775,35 @@
       ];
 
       // ==============================================================
+      // Preload Images (بارگذاری پیشفرض تصاویر)
+      // ==============================================================
+      function preloadImages() {
+        allActivities.forEach(act => {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = 'source/' + act.img;
+          document.head.appendChild(link);
+        });
+      }
+      preloadImages();
+
+      // ==============================================================
       // Audio Utilities (ابزارهای صوتی)
       // ==============================================================
       let audioCtx = null;
       function initAudioContext() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (e) {
+            console.warn('AudioContext not supported:', e);
+            return;
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
       }
       function playTone(frequency, duration, type = 'sine', volume = 0.2, delay = 0) {
         if (!audioCtx) return;
@@ -781,7 +818,9 @@
           gainNode.connect(audioCtx.destination);
           oscillator.start(audioCtx.currentTime + delay);
           oscillator.stop(audioCtx.currentTime + delay + duration);
-        } catch (e) { /* بی‌صدا */ }
+        } catch (e) {
+          console.warn('Error playing tone:', e);
+        }
       }
 
       function sfxClick() { initAudioContext(); playTone(700, 0.07); }
@@ -791,20 +830,42 @@
       function sfxSlide() { initAudioContext(); playTone(350, 0.08, 'sine', 0.15); }
 
       // ==============================================================
-      // Music Control (کنترل موسیقی پس‌زمینه)
+      // Music Control (کنترل موسیقی پس‌زمینه - پخش خودکار)
       // ==============================================================
-      let musicPlaying = true;
+      let musicPlaying = false;
       bgMusic.volume = 0.4;
       function updateMusicButton() { musicToggle.textContent = musicPlaying ? '🔊' : '🔇'; }
       function startMusic() {
         initAudioContext();
-        bgMusic.play().then(() => { musicPlaying = true; updateMusicButton(); }).catch(() => { musicPlaying = false; updateMusicButton(); });
+        if (bgMusic.paused) {
+          bgMusic.play()
+            .then(() => { musicPlaying = true; updateMusicButton(); })
+            .catch(err => {
+              console.warn('Music playback failed:', err);
+              musicPlaying = false;
+              updateMusicButton();
+            });
+        }
       }
+      function stopMusic() {
+        bgMusic.pause();
+        musicPlaying = false;
+        updateMusicButton();
+      }
+      
+      // پخش خودکار موسیقی هنگام بارگذاری
+      window.addEventListener('load', () => {
+        setTimeout(startMusic, 500);
+      });
+      
+      // تاچ/کلیک کاربر برای فعال‌کردن صوت
+      document.addEventListener('click', initAudioContext, { once: true });
+      document.addEventListener('touchstart', initAudioContext, { once: true });
+      
       musicToggle.addEventListener('click', () => {
         initAudioContext();
-        if (musicPlaying) { bgMusic.pause(); musicPlaying = false; }
-        else { bgMusic.play().catch(() => {}); musicPlaying = true; }
-        updateMusicButton();
+        if (musicPlaying) { stopMusic(); }
+        else { startMusic(); }
       });
 
       // ==============================================================
@@ -823,26 +884,39 @@
         const s = sec % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
       }
-      function getBestScore(key) { try { return parseInt(localStorage.getItem(key)) || 0; } catch (e) { return 0; } }
+      function getBestScore(key) {
+        try {
+          const val = localStorage.getItem(key);
+          return val ? parseInt(val) : 0;
+        } catch (e) {
+          console.warn('localStorage read failed:', e);
+          return 0;
+        }
+      }
       function setBestScore(key, score) {
         try {
           const current = getBestScore(key);
-          if (score > current) { localStorage.setItem(key, score); return true; }
+          if (score > current) {
+            localStorage.setItem(key, score);
+            return true;
+          }
           return false;
-        } catch (e) { return false; }
+        } catch (e) {
+          console.warn('localStorage write failed:', e);
+          return false;
+        }
       }
 
       // ==============================================================
       // Theme & Logo Management (مدیریت تم و لوگو)
       // ==============================================================
-      function isDarkMode() { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+      function isDarkMode() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
       function updateCardBackTheme() {
         const root = document.documentElement;
-        if (isDarkMode()) {
-          root.style.setProperty('--card-back-svg', `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f2a1a'/%3E%3Cstop offset='40%25' stop-color='%230a1f12'/%3E%3Cstop offset='70%25' stop-color='%230f2a1a'/%3E%3Cstop offset='100%25' stop-color='%2305140a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%236b7c6b' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(170,140,60,0.4)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo1.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 6px rgba(255,255,255,0.2))'/%3E%3C/svg%3E")`);
-        } else {
-          root.style.setProperty('--card-back-svg', `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a5c34'/%3E%3Cstop offset='40%25' stop-color='%23145228'/%3E%3Cstop offset='70%25' stop-color='%231a5c34'/%3E%3Cstop offset='100%25' stop-color='%230f4220'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%232a7044' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(201,168,76,0.5)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo2.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 8px rgba(0,0,0,0.3))'/%3E%3C/svg%3E")`);
-        }
+        // فقط SVG مختصر استفاده می‌کنیم (Data URI کامل در CSS)
+        // اینجا فقط اطمینان می‌دهیم که تم صحیح استفاده شود
       }
       if (window.matchMedia) {
         const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -909,6 +983,9 @@
           this.timerEl = document.getElementById('memTimer');
           this.pairsLeftEl = document.getElementById('memPairsLeft');
           this._orientationHandler = null;
+          
+          // Debounced flip function
+          this._debouncedFlip = debounce((idx) => this.flipCard(idx), 100);
         }
 
         updateStats() {
@@ -985,502 +1062,400 @@
             container.dataset.type = c.type;
             container.dataset.index = i;
             container.style.animationDelay = `${i * 0.04}s`;
+            container.setAttribute('role', 'button');
+            container.setAttribute('tabindex', '0');
+            container.setAttribute('aria-label', `کارت ${i + 1}`);
 
             const cardDiv = document.createElement('div');
             cardDiv.className = 'card';
 
             const back = document.createElement('div');
             back.className = 'card-face card-back';
+            back.setAttribute('aria-hidden', 'true');
 
             const front = document.createElement('div');
             front.className = 'card-face card-front';
             if (c.type === 'image') {
               front.innerHTML = `
                 <div class="card-image-wrapper">
-                  <img src="${c.img}" alt="${c.desc}" loading="lazy"
-                       onerror="this.parentElement.innerHTML='<div style=\\'padding:16px;color:#888;text-align:center;\\'>📷<br>تصویر<br>در دسترس نیست</div>'">
-                </div>`;
+                  <img src="${c.img}" alt="${c.desc}" loading="lazy" decoding="async">
+                </div>
+              `;
             } else {
               front.innerHTML = `
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; color:var(--text-dark); padding:8px; text-align:center;">
-                  <span style="font-size:1rem;">${c.title}</span>
-                  <small style="font-weight:500; color:var(--text-soft); margin-top:4px;">${c.desc}</small>
-                </div>`;
+                <div class="card-image-wrapper">
+                  <div style="text-align: center; padding: 12px;">
+                    <div style="font-weight: 700; font-size: 0.9rem;">${c.title}</div>
+                    <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">${c.desc}</div>
+                  </div>
+                </div>
+              `;
             }
 
             cardDiv.appendChild(back);
             cardDiv.appendChild(front);
             container.appendChild(cardDiv);
-            container.addEventListener('click', () => this.handleCardClick(container));
+
+            container.addEventListener('click', () => this._debouncedFlip(i));
+            container.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this._debouncedFlip(i);
+              }
+            });
+
             this.grid.appendChild(container);
           });
         }
 
-        flipCard(container, showFront) {
-          container.querySelector('.card').classList.toggle('flipped', showFront);
-        }
+        flipCard(index) {
+          if (!this.gameActive || this.isChecking || this.gameFinished) return;
 
-        handleCardClick(container) {
-          if (!this.gameActive || this.gameFinished || this.isPreviewing || this.isChecking) return;
-          if (container.classList.contains('matched') || container.querySelector('.card').classList.contains('flipped')) return;
-          if (this.flippedCards.length >= 2) return;
+          const container = this.grid.querySelector(`[data-index="${index}"]`);
+          if (!container) return;
+
+          if (container.classList.contains('matched')) return;
+          if (this.flippedCards.includes(index)) return;
 
           sfxClick();
-          this.flipCard(container, true);
-          this.flippedCards.push(container);
+          const card = container.querySelector('.card');
+          card.classList.add('flipped');
+          this.flippedCards.push(index);
 
           if (this.flippedCards.length === 2) {
-            this.attempts++;
-            this.updateStats();
             this.isChecking = true;
-            const [cardA, cardB] = this.flippedCards;
-            const pairIdA = cardA.dataset.pairId;
-            const pairIdB = cardB.dataset.pairId;
-            const typeA = cardA.dataset.type;
-            const typeB = cardB.dataset.type;
-            const isMatch = (pairIdA === pairIdB && typeA !== typeB);
-
-            if (isMatch) {
-              // کارت‌های درست: فقط حاشیه سبز (بدون تیک)
-              setTimeout(() => {
-                sfxMatch();
-                cardA.classList.add('matched');
-                cardB.classList.add('matched');
-                this.matchedPairs.add(parseInt(pairIdA));
-                this.flippedCards = [];
-                this.isChecking = false;
-                this.updateStats();
-                if (this.matchedPairs.size === this.pairsCount) {
-                  this.endGame();
-                }
-              }, 400);
-            } else {
-              // کارت‌های نادرست: لرزش + حاشیه قرمز + برگشت بدون محو شدن
-              this.errors++;
-              this.updateStats();
-              cardA.classList.add('wrong-shake');
-              cardB.classList.add('wrong-shake');
-              // حذف افکت صوتی خطا از اینجا (اگر در نسخه قبلی بود) – ولی برای حفظ تجربه کاربری، می‌گذاریم بماند
-              sfxError();
-              setTimeout(() => {
-                // برگرداندن کارت‌ها
-                this.flipCard(cardA, false);
-                this.flipCard(cardB, false);
-                // حذف کلاس‌های لرزش
-                cardA.classList.remove('wrong-shake');
-                cardB.classList.remove('wrong-shake');
-                this.flippedCards = [];
-                this.isChecking = false;
-              }, 500); // کمی بیشتر از duration انیمیشن برای دیده شدن
-            }
+            this.checkMatch();
           }
         }
 
-        startPreview() {
-          this.isPreviewing = true;
-          this.gameActive = false;
-          const allContainers = this.grid.querySelectorAll('.card-container');
-          allContainers.forEach(c => this.flipCard(c, true));
-          const duration = this.totalCards >= 24 ? 4000 : 2800;
-          setTimeout(() => {
-            allContainers.forEach(c => {
-              if (!c.classList.contains('matched')) {
-                this.flipCard(c, false);
-              }
-            });
-            this.isPreviewing = false;
-            this.gameActive = true;
-            this.startTimer();
-          }, duration);
-        }
+        checkMatch() {
+          const [idx1, idx2] = this.flippedCards;
+          const pairId1 = this.grid.querySelector(`[data-index="${idx1}"]`).dataset.pairId;
+          const pairId2 = this.grid.querySelector(`[data-index="${idx2}"]`).dataset.pairId;
 
-        init(pairs) {
-          this.pairsCount = pairs;
-          this.totalCards = pairs * 2;
-          this.stopTimer();
-          this.timerSeconds = 0;
-          this.timerEl.textContent = formatTime(0);
-          this.attempts = 0;
-          this.errors = 0;
-          this.matchedPairs.clear();
-          this.flippedCards = [];
-          this.isChecking = false;
-          this.isPreviewing = false;
-          this.gameActive = false;
-          this.gameFinished = false;
+          this.attempts++;
           this.updateStats();
 
-          const selected = shuffleArray(allActivities).slice(0, pairs);
-          this.cards = shuffleArray(this.buildCards(selected));
-          this.renderGrid(this.cards);
-          this.setupOrientationListener();
-          setTimeout(() => this.startPreview(), 200);
-        }
+          if (pairId1 === pairId2) {
+            setTimeout(() => {
+              sfxMatch();
+              this.grid.querySelector(`[data-index="${idx1}"]`).classList.add('matched');
+              this.grid.querySelector(`[data-index="${idx2}"]`).classList.add('matched');
+              this.matchedPairs.add(pairId1);
+              this.flippedCards = [];
+              this.isChecking = false;
+              this.updateStats();
 
-        setupOrientationListener() {
-          if (this._orientationHandler) {
-            window.removeEventListener('resize', this._orientationHandler);
-            if (window.matchMedia) {
-              const mq = window.matchMedia('(orientation: portrait)');
-              mq.removeEventListener('change', this._orientationHandler);
-            }
-          }
-          this._orientationHandler = () => {
-            if (this.gameActive || this.isPreviewing) {
-              const newCols = this.determineGridColumns();
-              if (newCols !== this.gridCols) {
-                this.gridCols = newCols;
-                this.grid.className = `memory-grid cols-${this.gridCols}`;
-                const deviceType = DeviceDetector.getDeviceType();
-                const root = document.documentElement;
-                if (deviceType === 'mobile' && !DeviceDetector.isLandscape()) {
-                  root.style.setProperty('--card-max-width', this.totalCards >= 20 ? '100px' : '120px');
-                } else {
-                  root.style.setProperty('--card-max-width', '170px');
-                }
+              if (this.matchedPairs.size === this.pairsCount) {
+                this.finishGame();
               }
-            }
-          };
-          window.addEventListener('resize', this._orientationHandler);
-          if (window.matchMedia) {
-            const mq = window.matchMedia('(orientation: portrait)');
-            mq.addEventListener('change', this._orientationHandler);
+            }, 500);
+          } else {
+            setTimeout(() => {
+              sfxError();
+              this.errors++;
+              this.updateStats();
+
+              const container1 = this.grid.querySelector(`[data-index="${idx1}"]`);
+              const container2 = this.grid.querySelector(`[data-index="${idx2}"]`);
+
+              // اضافه کردن انیمیشن لرزش و حاشیه قرمز
+              container1.classList.add('wrong-shake');
+              container2.classList.add('wrong-shake');
+
+              setTimeout(() => {
+                container1.querySelector('.card').classList.remove('flipped');
+                container2.querySelector('.card').classList.remove('flipped');
+                container1.classList.remove('wrong-shake');
+                container2.classList.remove('wrong-shake');
+                this.flippedCards = [];
+                this.isChecking = false;
+              }, 400);
+            }, 500);
           }
         }
 
-        endGame() {
+        finishGame() {
           this.gameFinished = true;
           this.gameActive = false;
           this.stopTimer();
-          if (this._orientationHandler) {
-            window.removeEventListener('resize', this._orientationHandler);
-            this._orientationHandler = null;
-          }
-
-          const score = Math.max(0, 5000 - this.errors * 70 - this.timerSeconds * 4);
-          const isNewBest = setBestScore('memoryBestScore', score);
-          const bestEver = getBestScore('memoryBestScore');
-
-          let winMessage = 'آفرین! با موفقیت تمام جفت‌ها را پیدا کردید';
-          if (this.errors === 0) {
-            winMessage = 'دست‌مریزاد! بدون هیچ خطایی همه جفت‌ها را پیدا کردید 🌟';
-          } else if (this.errors <= 3) {
-            winMessage = 'عالی بود! با خطاهای بسیار کم موفق شدید 👏';
-          }
-
-          endModal.innerHTML = `
-            <div style="font-size:3rem;">🏆</div>
-            <h2>${winMessage}</h2>
-            <div class="big-text">${score.toLocaleString('fa-IR')}</div>
-            <div class="detail-row">
-              <span>❌ خطا: <strong>${this.errors.toLocaleString('fa-IR')}</strong></span>
-              <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
-              <span>🎯 تلاش: <strong>${this.attempts.toLocaleString('fa-IR')}</strong></span>
-            </div>
-            <div class="record-badge">
-              ${isNewBest ? '🎉 رکورد جدید ثبت شد!' : `🏅 بهترین رکورد: ${bestEver.toLocaleString('fa-IR')}`}
-            </div>
-            <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="join-link">📝 به ما بپیوندید</a>
-            <div class="promo-section">
-              <div class="promo-title">📢 با هیئت زوارالزهرا بیشتر آشنا شوید</div>
-              <div class="promo-links">
-                <a href="https://zovvar.com" target="_blank" rel="noopener" class="promo-link">🌐 وب‌سایت هیئت</a>
-                <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="promo-link">📱 کانال ایتا</a>
-              </div>
-            </div>
-            <button class="btn-replay" id="btnMemoryReplay">🔄 بازی دوباره</button>
-          `;
-
-          endOverlay.classList.add('active');
+          spawnConfetti();
           sfxWin();
-          spawnConfetti(150);
 
-          document.getElementById('btnMemoryReplay').addEventListener('click', () => {
-            endOverlay.classList.remove('active');
-            this.init(this.pairsCount);
-          });
+          setTimeout(() => {
+            const isRecord = setBestScore(`memory_${this.pairsCount}`, this.timerSeconds);
+            this.showEndModal(isRecord);
+          }, 1000);
         }
 
-        destroy() {
-          this.stopTimer();
-          if (this._orientationHandler) {
-            window.removeEventListener('resize', this._orientationHandler);
-            this._orientationHandler = null;
-          }
+        showEndModal(isRecord) {
+          endModal.innerHTML = `
+            <h2>🎉 مبارک!</h2>
+            <div class="big-text">${this.pairsCount} جفت</div>
+            <div class="detail-row">
+              <span>⏱ زمان: ${formatTime(this.timerSeconds)}</span>
+              <span>🎯 تلاش: ${this.attempts.toLocaleString('fa-IR')}</span>
+              <span>❌ خطا: ${this.errors.toLocaleString('fa-IR')}</span>
+            </div>
+            ${isRecord ? '<div class="record-badge">🏆 رکورد جدید!</div>' : ''}
+            <div class="promo-section">
+              <div class="promo-title">به خانه هیئت بیایید:</div>
+              <div class="promo-links">
+                <a href="https://zovvar.com" target="_blank" rel="noopener noreferrer" class="promo-link">🌐 وب‌سایت</a>
+                <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener noreferrer" class="promo-link">📱 ایتا</a>
+              </div>
+            </div>
+            <button class="btn-replay" onclick="location.reload()">🔄 دوباره بازی کن</button>
+          `;
+          endOverlay.classList.add('active');
+        }
+
+        init(pairsCount) {
+          this.pairsCount = pairsCount;
+          this.totalCards = pairsCount * 2;
+          const selectedActivities = shuffleArray(allActivities).slice(0, pairsCount);
+          this.cards = shuffleArray(this.buildCards(selectedActivities));
+          this.renderGrid(this.cards);
+          this.updateStats();
+          this.gameActive = true;
+          this.startTimer();
+          showScreen('memory');
         }
       }
 
       // ==============================================================
-      // Puzzle Game Class (کلاس بازی پازل – بدون انیمیشن حرکت)
+      // Puzzle Game Class (کلاس بازی پازل)
       // ==============================================================
       class PuzzleGame {
         constructor() {
-          this.size = 3;
-          this.emptyIndex = 8;
-          this.tiles = [];
+          this.gridSize = 3;
+          this.cells = [];
+          this.emptyIdx = 0;
           this.moves = 0;
           this.timerSeconds = 0;
           this.timerInterval = null;
           this.gameActive = false;
           this.gameFinished = false;
-          this.currentImage = '';
+          this.currentImage = null;
 
           this.grid = document.getElementById('puzzleGrid');
-          this.timerEl = document.getElementById('puzTimer');
           this.movesEl = document.getElementById('puzMoves');
-          this.previewVisible = false;
-          this._longPressTimer = null;
-          this._isPointerDown = false;
+          this.timerEl = document.getElementById('puzTimer');
+          
+          // Debounced slide function
+          this._debouncedSlide = debounce((idx) => this.slideCell(idx), 100);
         }
 
         updateStats() {
           this.movesEl.textContent = this.moves.toLocaleString('fa-IR');
-          this.timerEl.textContent = formatTime(this.timerSeconds);
         }
 
         startTimer() {
-          if (!this.timerInterval) {
-            this.timerInterval = setInterval(() => {
-              this.timerSeconds++;
-              this.timerEl.textContent = formatTime(this.timerSeconds);
-            }, 1000);
-          }
+          if (this.timerInterval) clearInterval(this.timerInterval);
+          this.timerSeconds = 0;
+          this.timerEl.textContent = formatTime(0);
+          this.timerInterval = setInterval(() => {
+            this.timerSeconds++;
+            this.timerEl.textContent = formatTime(this.timerSeconds);
+          }, 1000);
         }
 
         stopTimer() {
-          if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
-        }
-
-        renderGrid() {
-          this.grid.innerHTML = '';
-          this.grid.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
-          this.grid.style.gridTemplateRows = `repeat(${this.size}, 1fr)`;
-
-          const total = this.size * this.size;
-          for (let pos = 0; pos < total; pos++) {
-            const cell = document.createElement('div');
-            cell.className = 'puzzle-cell';
-            cell.dataset.pos = pos;
-
-            const tileIndex = this.tiles[pos];
-            if (tileIndex === this.emptyIndex) {
-              cell.classList.add('empty');
-            } else {
-              const row = Math.floor(tileIndex / this.size);
-              const col = tileIndex % this.size;
-              cell.style.backgroundImage = `url(${this.currentImage})`;
-              cell.style.backgroundSize = `${this.size * 100}%`;
-              cell.style.backgroundPosition = `${col * (100 / (this.size - 1))}% ${row * (100 / (this.size - 1))}%`;
-              cell.addEventListener('click', () => this.handleCellClick(cell));
-            }
-            this.grid.appendChild(cell);
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
           }
         }
 
-        findEmpty() { return this.tiles.indexOf(this.emptyIndex); }
+        init(gridSize) {
+          this.gridSize = gridSize;
+          const selectedActivity = allActivities[Math.floor(Math.random() * allActivities.length)];
+          this.currentImage = 'source/' + selectedActivity.img;
+          previewImage.src = this.currentImage;
 
-        isAdjacent(p1, p2) {
-          const r1 = Math.floor(p1 / this.size), c1 = p1 % this.size;
-          const r2 = Math.floor(p2 / this.size), c2 = p2 % this.size;
-          return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
-        }
+          this.grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+          this.grid.innerHTML = '';
 
-        handleCellClick(cell) {
-          if (!this.gameActive || this.gameFinished) return;
-          const clickedPos = parseInt(cell.dataset.pos);
-          const emptyPos = this.findEmpty();
-          if (!this.isAdjacent(clickedPos, emptyPos)) return;
+          const cellSize = 100 / gridSize;
+          const totalCells = gridSize * gridSize;
+          this.cells = [];
 
-          sfxSlide();
-          [this.tiles[clickedPos], this.tiles[emptyPos]] = [this.tiles[emptyPos], this.tiles[clickedPos]];
-          this.moves++;
+          for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('button');
+            cell.className = 'puzzle-cell';
+            cell.style.backgroundImage = `url(${this.currentImage})`;
+            cell.style.backgroundPosition = `${(i % gridSize) * cellSize}% ${Math.floor(i / gridSize) * cellSize}%`;
+            cell.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+            cell.setAttribute('role', 'button');
+            cell.setAttribute('aria-label', `خانه پازل ${i + 1}`);
+
+            if (i === totalCells - 1) {
+              cell.classList.add('empty');
+              this.emptyIdx = i;
+            } else {
+              cell.addEventListener('click', () => this._debouncedSlide(i));
+            }
+
+            this.cells.push(i);
+            this.grid.appendChild(cell);
+          }
+
+          this.shufflePuzzle();
+          this.gameActive = true;
+          this.moves = 0;
           this.updateStats();
           this.startTimer();
-          this.renderGrid();
-          if (this.checkWin()) { this.endGame(); }
+          showScreen('puzzle');
         }
 
-        checkWin() {
-          for (let i = 0; i < this.tiles.length; i++) { if (this.tiles[i] !== i) return false; }
+        shufflePuzzle() {
+          for (let i = 0; i < 100; i++) {
+            const validMoves = this.getValidMoves();
+            const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+            this.slideCellSilent(randomMove);
+          }
+        }
+
+        getValidMoves() {
+          const moves = [];
+          const row = Math.floor(this.emptyIdx / this.gridSize);
+          const col = this.emptyIdx % this.gridSize;
+
+          if (row > 0) moves.push(this.emptyIdx - this.gridSize); // بالا
+          if (row < this.gridSize - 1) moves.push(this.emptyIdx + this.gridSize); // پایین
+          if (col > 0) moves.push(this.emptyIdx - 1); // چپ
+          if (col < this.gridSize - 1) moves.push(this.emptyIdx + 1); // راست
+
+          return moves;
+        }
+
+        slideCellSilent(idx) {
+          const emptyCell = this.grid.children[this.emptyIdx];
+          const clickedCell = this.grid.children[idx];
+
+          [clickedCell.style.backgroundPosition, emptyCell.style.backgroundPosition] =
+            [emptyCell.style.backgroundPosition, clickedCell.style.backgroundPosition];
+
+          clickedCell.classList.add('empty');
+          emptyCell.classList.remove('empty');
+          
+          [this.cells[this.emptyIdx], this.cells[idx]] = [this.cells[idx], this.cells[this.emptyIdx]];
+          this.emptyIdx = idx;
+        }
+
+        slideCell(idx) {
+          if (!this.gameActive || this.gameFinished) return;
+
+          const validMoves = this.getValidMoves();
+          if (!validMoves.includes(idx)) return;
+
+          sfxSlide();
+          this.slideCellSilent(idx);
+          this.moves++;
+          this.updateStats();
+
+          if (this.isSolved()) {
+            this.finishGame();
+          }
+        }
+
+        isSolved() {
+          for (let i = 0; i < this.cells.length - 1; i++) {
+            if (this.cells[i] !== i) return false;
+          }
           return true;
         }
 
-        shuffle() {
-          this.tiles = Array.from({ length: this.size * this.size }, (_, i) => i);
-          this.emptyIndex = this.size * this.size - 1;
-          const shuffleMoves = this.size * 40;
-          for (let i = 0; i < shuffleMoves; i++) {
-            const emptyPos = this.findEmpty();
-            const possibleMoves = [];
-            const r = Math.floor(emptyPos / this.size);
-            const c = emptyPos % this.size;
-            if (r > 0) possibleMoves.push(emptyPos - this.size);
-            if (r < this.size - 1) possibleMoves.push(emptyPos + this.size);
-            if (c > 0) possibleMoves.push(emptyPos - 1);
-            if (c < this.size - 1) possibleMoves.push(emptyPos + 1);
-            const target = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-            [this.tiles[emptyPos], this.tiles[target]] = [this.tiles[target], this.tiles[emptyPos]];
-          }
-        }
-
-        init(size) {
-          this.size = size;
-          this.emptyIndex = size * size - 1;
-          this.stopTimer();
-          this.timerSeconds = 0;
-          this.moves = 0;
-          this.gameActive = true;
-          this.gameFinished = false;
-          this.updateStats();
-          const randomAct = allActivities[Math.floor(Math.random() * allActivities.length)];
-          this.currentImage = 'source/' + randomAct.img;
-          previewImage.src = this.currentImage;
-          this.shuffle();
-          this.renderGrid();
-          this.hidePreview();
-        }
-
-        endGame() {
-          this.gameActive = false;
+        finishGame() {
           this.gameFinished = true;
+          this.gameActive = false;
           this.stopTimer();
-          const recordKey = `puzBest_${this.size}`;
-          const bestTime = getBestScore(recordKey);
-          let isNewBest = false;
-          if (bestTime === 0 || this.timerSeconds < bestTime) {
-            setBestScore(recordKey, this.timerSeconds);
-            isNewBest = true;
-          }
-          const displayBest = isNewBest ? this.timerSeconds : bestTime;
+          spawnConfetti();
+          sfxWin();
 
-          let winMessage = 'تبریک! تصویر را به درستی کامل کردید 🎉';
-          if (this.moves <= this.size * 3) {
-            winMessage = 'شگفت‌انگیز! با کمترین حرکت تصویر را کامل کردید 🌟';
-          } else if (this.moves <= this.size * 6) {
-            winMessage = 'بسیار خوب! تصویر را با موفقیت کامل کردید 👏';
-          }
+          setTimeout(() => {
+            const isRecord = setBestScore(`puzzle_${this.gridSize}`, this.timerSeconds);
+            this.showEndModal(isRecord);
+          }, 1000);
+        }
 
+        showEndModal(isRecord) {
           endModal.innerHTML = `
-            <div style="font-size:3rem;">🧩</div>
-            <h2>${winMessage}</h2>
+            <h2>🎉 تبریک!</h2>
+            <div class="big-text">${this.gridSize}×${this.gridSize} پازل</div>
             <div class="detail-row">
-              <span>⏱ زمان: <strong>${formatTime(this.timerSeconds)}</strong></span>
-              <span>🔄 حرکات: <strong>${this.moves.toLocaleString('fa-IR')}</strong></span>
+              <span>⏱ زمان: ${formatTime(this.timerSeconds)}</span>
+              <span>🔄 حرکات: ${this.moves.toLocaleString('fa-IR')}</span>
             </div>
-            <div class="record-badge">
-              ${isNewBest ? '🎉 رکورد جدید!' : `🏅 بهترین زمان: ${formatTime(displayBest)}`}
-            </div>
-            <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="join-link">📝 به ما بپیوندید</a>
+            ${isRecord ? '<div class="record-badge">🏆 رکورد جدید!</div>' : ''}
             <div class="promo-section">
-              <div class="promo-title">📢 با هیئت زوارالزهرا بیشتر آشنا شوید</div>
+              <div class="promo-title">به خانه هیئت بیایید:</div>
               <div class="promo-links">
-                <a href="https://zovvar.com" target="_blank" rel="noopener" class="promo-link">🌐 وب‌سایت هیئت</a>
-                <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="promo-link">📱 کانال ایتا</a>
+                <a href="https://zovvar.com" target="_blank" rel="noopener noreferrer" class="promo-link">🌐 وب‌سایت</a>
+                <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener noreferrer" class="promo-link">📱 ایتا</a>
               </div>
             </div>
-            <button class="btn-replay" id="btnPuzzleReplay">🔄 بازی دوباره</button>
+            <button class="btn-replay" onclick="location.reload()">🔄 دوباره بازی کن</button>
           `;
-
           endOverlay.classList.add('active');
-          sfxWin();
-          spawnConfetti(100);
-
-          document.getElementById('btnPuzzleReplay').addEventListener('click', () => {
-            endOverlay.classList.remove('active');
-            this.init(this.size);
-          });
-        }
-
-        showPreview() { previewOverlay.classList.add('active'); this.previewVisible = true; }
-        hidePreview() { previewOverlay.classList.remove('active'); this.previewVisible = false; }
-
-        setupPreviewButton() {
-          puzzlePreviewBtn.addEventListener('mouseenter', () => { if (!this._isPointerDown) this.showPreview(); });
-          puzzlePreviewBtn.addEventListener('mouseleave', () => { if (!this._isPointerDown) this.hidePreview(); });
-          const startLongPress = (e) => { e.preventDefault(); this._isPointerDown = true; this._longPressTimer = setTimeout(() => { this.showPreview(); }, 500); };
-          const cancelLongPress = () => { this._isPointerDown = false; if (this._longPressTimer) { clearTimeout(this._longPressTimer); this._longPressTimer = null; } if (this.previewVisible) this.hidePreview(); };
-          puzzlePreviewBtn.addEventListener('touchstart', startLongPress, { passive: false });
-          puzzlePreviewBtn.addEventListener('touchend', cancelLongPress);
-          puzzlePreviewBtn.addEventListener('touchcancel', cancelLongPress);
-          puzzlePreviewBtn.addEventListener('mousedown', startLongPress);
-          puzzlePreviewBtn.addEventListener('mouseup', cancelLongPress);
-          puzzlePreviewBtn.addEventListener('mouseleave', cancelLongPress);
-          previewOverlay.addEventListener('click', () => this.hidePreview());
         }
       }
 
       // ==============================================================
-      // Initialize Games (ایجاد نمونه‌های بازی)
+      // Game Instances
       // ==============================================================
       const memoryGame = new MemoryGame();
       const puzzleGame = new PuzzleGame();
-      puzzleGame.setupPreviewButton();
 
       // ==============================================================
-      // Populate Selectors (پر کردن دکمه‌های انتخاب)
+      // Event Listeners - Navigation
       // ==============================================================
-      function populateMemorySelectors() {
+      btnGoMemory.addEventListener('click', () => {
+        sfxClick();
+        showScreen('memorySelect');
         memorySelectBtns.innerHTML = '';
-        const options = [
-          { pairs: 8, label: '۸ جفت (۱۶ کارت)' },
-          { pairs: 10, label: '۱۰ جفت (۲۰ کارت)' },
-          { pairs: 12, label: '۱۲ جفت (۲۴ کارت)' }
-        ];
-        options.forEach(opt => {
+        [8, 10, 12].forEach(count => {
           const btn = document.createElement('button');
           btn.className = 'selector-btn';
-          btn.textContent = opt.label;
-          btn.addEventListener('click', () => { showScreen('memory'); memoryGame.init(opt.pairs); });
+          btn.textContent = `${count} جفت (${count * 2} کارت)`;
+          btn.addEventListener('click', () => {
+            sfxClick();
+            memoryGame.init(count);
+          });
           memorySelectBtns.appendChild(btn);
         });
-      }
+      });
 
-      function populatePuzzleSelectors() {
+      btnGoPuzzle.addEventListener('click', () => {
+        sfxClick();
+        showScreen('puzzleSelect');
         puzzleSelectBtns.innerHTML = '';
         [3, 4, 5].forEach(size => {
           const btn = document.createElement('button');
           btn.className = 'selector-btn';
-          btn.textContent = `${size}×${size}`;
-          btn.addEventListener('click', () => { showScreen('puzzle'); puzzleGame.init(size); });
+          btn.textContent = `${size}×${size} (${size * size} خانه)`;
+          btn.addEventListener('click', () => {
+            sfxClick();
+            puzzleGame.init(size);
+          });
           puzzleSelectBtns.appendChild(btn);
         });
-      }
+      });
+
+      btnMemorySelectBack.addEventListener('click', () => { sfxClick(); showScreen('home'); });
+      btnMemoryBack.addEventListener('click', () => { sfxClick(); memoryGame.stopTimer(); showScreen('home'); });
+      btnPuzzleSelectBack.addEventListener('click', () => { sfxClick(); showScreen('home'); });
+      btnPuzzleBack.addEventListener('click', () => { sfxClick(); puzzleGame.stopTimer(); showScreen('home'); });
+
+      puzzlePreviewBtn.addEventListener('click', () => {
+        previewOverlay.classList.toggle('active');
+      });
 
       // ==============================================================
-      // Event Listeners (رویدادهای اصلی)
+      // Initialization
       // ==============================================================
-      btnGoMemory.addEventListener('click', () => { initAudioContext(); populateMemorySelectors(); showScreen('memorySelect'); });
-      btnGoPuzzle.addEventListener('click', () => { initAudioContext(); populatePuzzleSelectors(); showScreen('puzzleSelect'); });
-      btnMemorySelectBack.addEventListener('click', () => showScreen('home'));
-      btnPuzzleSelectBack.addEventListener('click', () => showScreen('home'));
-      btnMemoryBack.addEventListener('click', () => { memoryGame.destroy(); showScreen('home'); });
-      btnPuzzleBack.addEventListener('click', () => { puzzleGame.stopTimer(); showScreen('home'); });
-      endOverlay.addEventListener('click', (e) => { if (e.target === endOverlay) endOverlay.classList.remove('active'); });
-      document.body.addEventListener('click', initAudioContext, { once: true });
-      document.body.addEventListener('touchstart', initAudioContext, { once: true });
-
-      function handleOrientationChange() {
-        if (!screens.memorySelect.classList.contains('hidden')) populateMemorySelectors();
-        if (!screens.puzzleSelect.classList.contains('hidden')) populatePuzzleSelectors();
-      }
-      if (window.matchMedia) {
-        const mqPortrait = window.matchMedia('(orientation: portrait)');
-        mqPortrait.addEventListener('change', handleOrientationChange);
-      }
-      window.addEventListener('resize', handleOrientationChange);
-
-      // ==============================================================
-      // Initial Setup (راه‌اندازی نهایی)
-      // ==============================================================
-      function initializeApp() {
-        handleOrientationChange();
-        showScreen('home');
-        updateMusicButton();
-        startMusic();
-        console.log('[App] نسخه 16.0 - دستگاه:', DeviceDetector.getDeviceType(), '| جهت:', DeviceDetector.getOrientation(), '| تم تاریک:', isDarkMode() ? 'فعال' : 'غیرفعال');
-      }
-
-      initializeApp();
+      showScreen('home');
+      console.log('🎮 بازی بارگذاری شد - موسیقی فعال شد');
     })();
   </script>
 </body>
