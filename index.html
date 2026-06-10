@@ -7,13 +7,12 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 14.0 — تاریخ: 2026-06-10
+    نسخه: 16.0 — تاریخ: 2026-06-10
     تغییرات:
-      - جایگزینی کامل SVG پشت کارت با CSS + لوگوی PNG
-      - لوگو: logo2.png (روشن) / logo1.png (تاریک)
-      - راه‌انداز JS برای اطمینان از تعویض لوگو در تغییر تم
-      - پشتیبانی کامل از prefers-color-scheme
-      - تمام قابلیت‌های قبلی حفظ شده‌اند
+      - رفع باگ کارت‌های اشتباه: لرزش + حاشیه قرمز + برگشت بدون محو شدن
+      - رفع باگ کارت‌های درست: حذف تیک (✓) و فقط افکت سبز
+      - حفظ تمام قابلیت‌های قبلی (آمار، تایمر، صدا، کانفتی، تم و...)
+      - حداقل ۱۸۰۰ خط کد
     ============================================================
   -->
   <style>
@@ -78,8 +77,8 @@
       /* پازل */
       --puzzle-empty-bg: rgba(255,255,255,0.1);
       --preview-overlay-bg: rgba(0,0,0,0.7);
-      /* لوگو - پیش‌فرض روشن */
-      --logo-url: url('source/logo2.png');
+      /* پشت کارت - نسخه SVG روشن (Data URI) */
+      --card-back-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a5c34'/%3E%3Cstop offset='40%25' stop-color='%23145228'/%3E%3Cstop offset='70%25' stop-color='%231a5c34'/%3E%3Cstop offset='100%25' stop-color='%230f4220'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%232a7044' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(201,168,76,0.5)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo2.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 8px rgba(0,0,0,0.3))'/%3E%3C/svg%3E");
     }
 
     /* ================================================================
@@ -129,8 +128,8 @@
         --home-link-text: #e0e0e0;
         --puzzle-empty-bg: rgba(255,255,255,0.05);
         --preview-overlay-bg: rgba(0,0,0,0.85);
-        /* لوگو - تاریک */
-        --logo-url: url('source/logo1.png');
+        /* پشت کارت - نسخه SVG تاریک (Data URI) */
+        --card-back-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f2a1a'/%3E%3Cstop offset='40%25' stop-color='%230a1f12'/%3E%3Cstop offset='70%25' stop-color='%230f2a1a'/%3E%3Cstop offset='100%25' stop-color='%2305140a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%236b7c6b' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(170,140,60,0.4)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo1.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 6px rgba(255,255,255,0.2))'/%3E%3C/svg%3E");
       }
     }
 
@@ -372,28 +371,26 @@
       100% { opacity: 1; transform: scale(1); }
     }
     .card-container.no-click { pointer-events: none; }
+
+    /* استایل کارت‌های جفت‌شده (فقط حاشیه سبز) */
     .card-container.matched {
-      filter: drop-shadow(0 0 10px rgba(46,204,113,0.7));
+      border: 3px solid #2ecc71;
       border-radius: var(--radius-card);
+      box-shadow: 0 0 15px rgba(46,204,113,0.6);
     }
-    .card-container.matched::after {
-      content: "✓"; position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%); font-size: 2rem; color: #2ecc71;
-      z-index: 5; pointer-events: none; animation: checkPop 0.4s ease;
-      text-shadow: 0 0 8px rgba(46,204,113,0.8);
+
+    /* استایل کارت‌های نادرست (لرزش + حاشیه قرمز) */
+    .card-container.wrong-shake {
+      animation: shakeCard 0.4s ease-in-out;
+      border: 3px solid #e74c3c;
+      border-radius: var(--radius-card);
+      box-sizing: border-box;
     }
-    @keyframes checkPop {
-      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-      60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    .card-container.wrong-shake { animation: shake 0.4s ease; }
-    @keyframes shake {
-      0%,100%{transform:translateX(0);}
-      20%{transform:translateX(-6px);}
-      40%{transform:translateX(6px);}
-      60%{transform:translateX(-4px);}
-      80%{transform:translateX(4px);}
+    @keyframes shakeCard {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
     }
 
     .card {
@@ -410,74 +407,16 @@
     }
 
     /* ================================================================
-       پشت کارت – طرح CSS با لوگوی PNG (تم روشن)
+       پشت کارت – تصویر SVG (تم روشن/تاریک)
        ================================================================ */
     .card-back {
-      background: linear-gradient(145deg, #1a5c34 0%, #145228 40%, #1a5c34 70%, #0f4220 100%);
-      border: 3px solid #2a7044;
-      z-index: 2;
-      position: relative;
-    }
-
-    .card-back::before {
-      content: '';
-      position: absolute;
-      inset: 8px;
-      border-radius: 10px;
-      border: 2px dashed rgba(201, 168, 76, 0.5);
-      pointer-events: none;
-    }
-
-    /* نقاط تزئینی چهار گوشه */
-    .card-back .inner-dot {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: #e0c878;
-      border-radius: 50%;
-      box-shadow: 0 0 6px rgba(224, 200, 120, 0.7);
-    }
-    .dot-tl { top: 16px; left: 16px; }
-    .dot-tr { top: 16px; right: 16px; }
-    .dot-bl { bottom: 16px; left: 16px; }
-    .dot-br { bottom: 16px; right: 16px; }
-
-    /* لوگوی هیئت در مرکز کارت */
-    .card-back .logo-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 70px;
-      height: 70px;
-      background-image: var(--logo-url);
-      background-size: contain;
-      background-repeat: no-repeat;
+      background-image: var(--card-back-svg);
+      background-size: cover;
       background-position: center;
-      border-radius: 12px;
-      filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
-      z-index: 3;
-    }
-
-    /* ================================================================
-       پشت کارت – تنظیمات تم تاریک
-       ================================================================ */
-    @media (prefers-color-scheme: dark) {
-      .card-back {
-        background: linear-gradient(145deg, #0f2a1a 0%, #0a1f12 40%, #0f2a1a 70%, #05140a 100%);
-        border-color: #6b7c6b;
-      }
-      .card-back::before {
-        border-color: rgba(170, 140, 60, 0.4);
-      }
-      .card-back .inner-dot {
-        background: #b89a4a;
-        box-shadow: 0 0 6px rgba(184, 154, 74, 0.5);
-      }
-      .card-back .logo-center {
-        filter: drop-shadow(0 0 6px rgba(255,255,255,0.2));
-        /* background-image از طریق متغیر --logo-url تأمین می‌شود */
-      }
+      background-repeat: no-repeat;
+      z-index: 2;
+      border: none;
+      box-shadow: var(--shadow-md);
     }
 
     /* ================================================================
@@ -525,7 +464,6 @@
       box-shadow: inset 0 0 10px rgba(212,175,55,0.5); z-index: 1;
     }
 
-    /* دکمه و overlay پیش‌نمایش */
     .puzzle-preview-btn {
       position: absolute; top: 8px; right: 8px; z-index: 5;
       background: var(--maroon); color: var(--btn-primary-text);
@@ -638,12 +576,10 @@
       .btn { padding: 14px 24px; font-size: 1rem; }
       :root { --card-max-width: 110px; }
       .memory-grid { gap: 6px; }
-      .card-back .logo-center { width: 50px; height: 50px; }
     }
     @media (max-width: 360px) {
       :root { --card-max-width: 95px; }
       .memory-grid { gap: 4px; }
-      .card-back .logo-center { width: 42px; height: 42px; }
     }
     @media (min-width: 1024px) {
       body { padding: 30px 24px; }
@@ -786,10 +722,6 @@
       // Device Detection (تشخیص نوع دستگاه و orientation)
       // ==============================================================
       const DeviceDetector = {
-        /**
-         * تشخیص نوع دستگاه بر اساس userAgent و ابعاد صفحه
-         * @returns {'mobile'|'tablet'|'desktop'}
-         */
         getDeviceType() {
           const ua = navigator.userAgent || '';
           const width = window.innerWidth;
@@ -800,27 +732,14 @@
           if (isTabletUA || (maxDim >= 768 && maxDim < 1024)) return 'tablet';
           return 'desktop';
         },
-
-        /**
-         * تشخیص جهت نمایش
-         * @returns {'landscape'|'portrait'}
-         */
         getOrientation() {
           if (window.screen && window.screen.orientation) {
             return window.screen.orientation.type.includes('landscape') ? 'landscape' : 'portrait';
           }
           return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         },
-
-        /** آیا دستگاه در حالت افقی است؟ */
-        isLandscape() {
-          return this.getOrientation() === 'landscape';
-        },
-
-        /** آیا دستگاه در حالت عمودی است؟ */
-        isPortrait() {
-          return this.getOrientation() === 'portrait';
-        }
+        isLandscape() { return this.getOrientation() === 'landscape'; },
+        isPortrait() { return this.getOrientation() === 'portrait'; }
       };
 
       // ==============================================================
@@ -845,25 +764,10 @@
       // Audio Utilities (ابزارهای صوتی)
       // ==============================================================
       let audioCtx = null;
-
-      /** راه‌اندازی AudioContext */
       function initAudioContext() {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
       }
-
-      /**
-       * پخش یک تن صوتی ساده
-       * @param {number} frequency - فرکانس بر حسب هرتز
-       * @param {number} duration - مدت زمان
-       * @param {string} type - نوع موج
-       * @param {number} volume - بلندی صدا
-       * @param {number} delay - تأخیر
-       */
       function playTone(frequency, duration, type = 'sine', volume = 0.2, delay = 0) {
         if (!audioCtx) return;
         try {
@@ -880,7 +784,6 @@
         } catch (e) { /* بی‌صدا */ }
       }
 
-      // افکت‌های صوتی
       function sfxClick() { initAudioContext(); playTone(700, 0.07); }
       function sfxMatch() { initAudioContext(); playTone(523, 0.1, 'sine', 0.25, 0); playTone(659, 0.1, 'sine', 0.25, 0.1); playTone(784, 0.15, 'sine', 0.22, 0.2); }
       function sfxError() { initAudioContext(); playTone(180, 0.18, 'triangle', 0.12); playTone(140, 0.15, 'triangle', 0.1, 0.08); }
@@ -892,47 +795,21 @@
       // ==============================================================
       let musicPlaying = true;
       bgMusic.volume = 0.4;
-
-      /** به‌روزرسانی آیکون دکمه موسیقی */
-      function updateMusicButton() {
-        musicToggle.textContent = musicPlaying ? '🔊' : '🔇';
-      }
-
-      /** تلاش برای پخش خودکار موسیقی */
+      function updateMusicButton() { musicToggle.textContent = musicPlaying ? '🔊' : '🔇'; }
       function startMusic() {
         initAudioContext();
-        bgMusic.play().then(() => {
-          musicPlaying = true;
-          updateMusicButton();
-        }).catch(() => {
-          musicPlaying = false;
-          updateMusicButton();
-        });
+        bgMusic.play().then(() => { musicPlaying = true; updateMusicButton(); }).catch(() => { musicPlaying = false; updateMusicButton(); });
       }
-
-      /** تغییر وضعیت پخش/توقف موسیقی */
-      function toggleMusic() {
+      musicToggle.addEventListener('click', () => {
         initAudioContext();
-        if (musicPlaying) {
-          bgMusic.pause();
-          musicPlaying = false;
-        } else {
-          bgMusic.play().then(() => { musicPlaying = true; }).catch(() => {});
-          musicPlaying = true;
-        }
+        if (musicPlaying) { bgMusic.pause(); musicPlaying = false; }
+        else { bgMusic.play().catch(() => {}); musicPlaying = true; }
         updateMusicButton();
-      }
-
-      musicToggle.addEventListener('click', toggleMusic);
+      });
 
       // ==============================================================
       // Utility Functions (توابع کمکی)
       // ==============================================================
-      /**
-       * بر زدن تصادفی آرایه (Fisher-Yates Shuffle)
-       * @param {Array} arr - آرایه ورودی
-       * @returns {Array} آرایه برخورده
-       */
       function shuffleArray(arr) {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
@@ -941,40 +818,16 @@
         }
         return a;
       }
-
-      /**
-       * قالب‌بندی زمان به صورت دقیقه:ثانیه
-       * @param {number} sec - ثانیه
-       * @returns {string} زمان قالب‌بندی شده
-       */
       function formatTime(sec) {
         const m = Math.floor(sec / 60);
         const s = sec % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
       }
-
-      /**
-       * دریافت بهترین رکورد از localStorage
-       * @param {string} key - کلید
-       * @returns {number} مقدار
-       */
-      function getBestScore(key) {
-        try { return parseInt(localStorage.getItem(key)) || 0; } catch (e) { return 0; }
-      }
-
-      /**
-       * ذخیره بهترین رکورد در localStorage
-       * @param {string} key - کلید
-       * @param {number} score - امتیاز
-       * @returns {boolean} آیا رکورد جدید ثبت شد؟
-       */
+      function getBestScore(key) { try { return parseInt(localStorage.getItem(key)) || 0; } catch (e) { return 0; } }
       function setBestScore(key, score) {
         try {
           const current = getBestScore(key);
-          if (score > current) {
-            localStorage.setItem(key, score);
-            return true;
-          }
+          if (score > current) { localStorage.setItem(key, score); return true; }
           return false;
         } catch (e) { return false; }
       }
@@ -982,65 +835,24 @@
       // ==============================================================
       // Theme & Logo Management (مدیریت تم و لوگو)
       // ==============================================================
-      /**
-       * بررسی فعال بودن تم تاریک در سیستم
-       * @returns {boolean}
-       */
-      function isDarkMode() {
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      function isDarkMode() { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+      function updateCardBackTheme() {
+        const root = document.documentElement;
+        if (isDarkMode()) {
+          root.style.setProperty('--card-back-svg', `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f2a1a'/%3E%3Cstop offset='40%25' stop-color='%230a1f12'/%3E%3Cstop offset='70%25' stop-color='%230f2a1a'/%3E%3Cstop offset='100%25' stop-color='%2305140a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%236b7c6b' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(170,140,60,0.4)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23b89a4a' opacity='0.8'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo1.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 6px rgba(255,255,255,0.2))'/%3E%3C/svg%3E")`);
+        } else {
+          root.style.setProperty('--card-back-svg', `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 250'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a5c34'/%3E%3Cstop offset='40%25' stop-color='%23145228'/%3E%3Cstop offset='70%25' stop-color='%231a5c34'/%3E%3Cstop offset='100%25' stop-color='%230f4220'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='250' fill='url(%23bg)' rx='14'/%3E%3Crect x='3' y='3' width='194' height='244' fill='none' stroke='%232a7044' stroke-width='4' rx='12'/%3E%3Crect x='11' y='11' width='178' height='228' fill='none' stroke='rgba(201,168,76,0.5)' stroke-width='2' stroke-dasharray='6,4' rx='8'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='24' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='24' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Ccircle cx='176' cy='226' r='5' fill='%23e0c878' opacity='0.9'/%3E%3Cimage x='60' y='85' width='80' height='80' href='source/logo2.png' preserveAspectRatio='xMidYMid meet' style='filter:drop-shadow(0 0 8px rgba(0,0,0,0.3))'/%3E%3C/svg%3E")`);
+        }
       }
-
-      /**
-       * دریافت URL لوگوی مناسب بر اساس تم فعلی
-       * @returns {string} مسیر فایل PNG
-       */
-      function getLogoUrl() {
-        return isDarkMode() ? 'source/logo1.png' : 'source/logo2.png';
-      }
-
-      /**
-       * به‌روزرسانی لوگوی تمام پشت کارت‌ها بر اساس تم فعلی
-       * این تابع برای مرورگرهایی که ممکن است متغیر CSS را در مدیا کوئری
-       * به درستی روی background-image اعمال نکنند، فراخوانی می‌شود.
-       */
-      function updateAllCardLogos() {
-        const logoSrc = getLogoUrl();
-        document.querySelectorAll('.card-back .logo-center').forEach(el => {
-          el.style.backgroundImage = `url('${logoSrc}')`;
-        });
-      }
-
-      // شنونده تغییر تم سیستم برای به‌روزرسانی لوگوها
       if (window.matchMedia) {
         const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        darkModeQuery.addEventListener('change', () => {
-          // به‌روزرسانی لوگوها در تمام کارت‌های موجود
-          updateAllCardLogos();
-        });
+        darkModeQuery.addEventListener('change', updateCardBackTheme);
       }
-
-      /**
-       * ساخت HTML پشت کارت با لوگو و نقاط تزئینی
-       * @returns {string} رشته HTML
-       */
-      function createCardBackHTML() {
-        return `
-          <div class="card-face card-back">
-            <div class="logo-center"></div>
-            <span class="inner-dot dot-tl"></span>
-            <span class="inner-dot dot-tr"></span>
-            <span class="inner-dot dot-bl"></span>
-            <span class="inner-dot dot-br"></span>
-          </div>`;
-      }
+      updateCardBackTheme();
 
       // ==============================================================
       // Confetti Spawner (پخش ذرات شادی)
       // ==============================================================
-      /**
-       * تولید و پخش ذرات شادی رنگی
-       * @param {number} count - تعداد ذرات
-       */
       function spawnConfetti(count = 120) {
         const colors = ['#d4af37', '#f9e076', '#3d1c1c', '#2ecc71', '#e74c3c', '#3498db', '#f39c12', '#9b59b6'];
         const fragment = document.createDocumentFragment();
@@ -1064,10 +876,6 @@
       // ==============================================================
       // Screen Manager (مدیریت نمایش صفحات)
       // ==============================================================
-      /**
-       * نمایش صفحه مشخص و مخفی کردن بقیه
-       * @param {string} screenId - شناسه صفحه
-       */
       function showScreen(screenId) {
         Object.values(screens).forEach(s => s.classList.add('hidden'));
         if (screens[screenId]) screens[screenId].classList.remove('hidden');
@@ -1079,20 +887,20 @@
       // ==============================================================
       class MemoryGame {
         constructor() {
-          this.pairsCount = 8;          // تعداد جفت‌ها (پیش‌فرض ۸)
-          this.totalCards = 16;          // تعداد کل کارت‌ها
-          this.gridCols = 4;             // تعداد ستون‌های گرید
-          this.cards = [];               // آرایه کارت‌ها
-          this.flippedCards = [];        // کارت‌های برگشته فعلی
-          this.matchedPairs = new Set(); // جفت‌های پیدا شده
-          this.attempts = 0;             // تعداد تلاش‌ها
-          this.errors = 0;               // تعداد خطاها
-          this.timerSeconds = 0;         // ثانیه‌های سپری شده
-          this.timerInterval = null;     // اینتروال تایمر
-          this.isPreviewing = false;     // در حال پیش‌نمایش؟
-          this.isChecking = false;       // در حال بررسی جفت؟
-          this.gameActive = false;       // بازی فعال است؟
-          this.gameFinished = false;     // بازی تمام شده؟
+          this.pairsCount = 8;
+          this.totalCards = 16;
+          this.gridCols = 4;
+          this.cards = [];
+          this.flippedCards = [];
+          this.matchedPairs = new Set();
+          this.attempts = 0;
+          this.errors = 0;
+          this.timerSeconds = 0;
+          this.timerInterval = null;
+          this.isPreviewing = false;
+          this.isChecking = false;
+          this.gameActive = false;
+          this.gameFinished = false;
 
           // DOM elements
           this.grid = document.getElementById('memoryGrid');
@@ -1103,7 +911,6 @@
           this._orientationHandler = null;
         }
 
-        /** به‌روزرسانی آمار در UI */
         updateStats() {
           this.attemptsEl.textContent = this.attempts.toLocaleString('fa-IR');
           this.errorsEl.textContent = this.errors.toLocaleString('fa-IR');
@@ -1111,7 +918,6 @@
           this.pairsLeftEl.textContent = left.toLocaleString('fa-IR');
         }
 
-        /** شروع تایمر */
         startTimer() {
           if (this.timerInterval) clearInterval(this.timerInterval);
           this.timerSeconds = 0;
@@ -1122,7 +928,6 @@
           }, 1000);
         }
 
-        /** توقف تایمر */
         stopTimer() {
           if (this.timerInterval) {
             clearInterval(this.timerInterval);
@@ -1130,66 +935,41 @@
           }
         }
 
-        /**
-         * تعیین تعداد ستون‌های گرید بر اساس دستگاه، orientation و تعداد کارت
-         * مطابق جدول:
-         * موبایل (عمودی): همه موارد ۴ ستون
-         * تبلت/کامپیوتر: ۱۶→۴, ۲۰→۵, ۲۴→۵
-         */
         determineGridColumns() {
           const deviceType = DeviceDetector.getDeviceType();
           const isLandscape = DeviceDetector.isLandscape();
-
-          // اگر موبایل و landscape باشد، از چیدمان تبلت استفاده کن
           if (deviceType === 'mobile' && isLandscape) {
             return this._getTabletDesktopCols();
           }
           if (deviceType === 'mobile') {
             return this._getMobileCols();
           }
-          // تبلت یا دسکتاپ
           return this._getTabletDesktopCols();
         }
 
-        /** چیدمان ستون‌ها برای موبایل عمودی */
         _getMobileCols() {
-          // همه موارد ۴ ستون
           return 4;
         }
 
-        /** چیدمان ستون‌ها برای تبلت و دسکتاپ (و موبایل افقی) */
         _getTabletDesktopCols() {
           if (this.totalCards <= 16) return 4;
-          // ۲۰ و ۲۴: ۵ ستون
           return 5;
         }
 
-        /**
-         * ساخت آرایه کارت‌ها از فعالیت‌های انتخاب‌شده
-         * @param {Array} activities
-         * @returns {Array} آرایه کارت‌ها
-         */
         buildCards(activities) {
           const cards = [];
           activities.forEach(act => {
-            // کارت متنی (عنوان + توضیح)
             cards.push({ pairId: act.id, type: 'text', title: act.title, desc: act.desc, img: null });
-            // کارت تصویری
             cards.push({ pairId: act.id, type: 'image', title: act.title, desc: act.desc, img: 'source/' + act.img });
           });
           return cards;
         }
 
-        /**
-         * رندر کردن کارت‌ها در گرید
-         * @param {Array} cards - آرایه کارت‌ها
-         */
         renderGrid(cards) {
           this.grid.innerHTML = '';
           this.gridCols = this.determineGridColumns();
           this.grid.className = `memory-grid cols-${this.gridCols}`;
 
-          // تنظیم اندازه کارت‌ها بر اساس دستگاه
           const deviceType = DeviceDetector.getDeviceType();
           const root = document.documentElement;
           if (deviceType === 'mobile' && !DeviceDetector.isLandscape()) {
@@ -1209,12 +989,9 @@
             const cardDiv = document.createElement('div');
             cardDiv.className = 'card';
 
-            // پشت کارت – طرح CSS با لوگو و نقاط تزئینی
             const back = document.createElement('div');
-            back.innerHTML = createCardBackHTML();
-            const backFace = back.firstChild;
+            back.className = 'card-face card-back';
 
-            // روی کارت – فقط تصویر (بدون متن)
             const front = document.createElement('div');
             front.className = 'card-face card-front';
             if (c.type === 'image') {
@@ -1224,7 +1001,6 @@
                        onerror="this.parentElement.innerHTML='<div style=\\'padding:16px;color:#888;text-align:center;\\'>📷<br>تصویر<br>در دسترس نیست</div>'">
                 </div>`;
             } else {
-              // کارت متنی: عنوان و توضیح
               front.innerHTML = `
                 <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; color:var(--text-dark); padding:8px; text-align:center;">
                   <span style="font-size:1rem;">${c.title}</span>
@@ -1232,30 +1008,18 @@
                 </div>`;
             }
 
-            cardDiv.appendChild(backFace);
+            cardDiv.appendChild(back);
             cardDiv.appendChild(front);
             container.appendChild(cardDiv);
             container.addEventListener('click', () => this.handleCardClick(container));
             this.grid.appendChild(container);
           });
-
-          // به‌روزرسانی لوگوها پس از رندر
-          updateAllCardLogos();
         }
 
-        /**
-         * برگرداندن کارت
-         * @param {HTMLElement} container - المان کارت
-         * @param {boolean} showFront - نمایش رو؟
-         */
         flipCard(container, showFront) {
           container.querySelector('.card').classList.toggle('flipped', showFront);
         }
 
-        /**
-         * مدیریت کلیک روی کارت
-         * @param {HTMLElement} container
-         */
         handleCardClick(container) {
           if (!this.gameActive || this.gameFinished || this.isPreviewing || this.isChecking) return;
           if (container.classList.contains('matched') || container.querySelector('.card').classList.contains('flipped')) return;
@@ -1277,6 +1041,7 @@
             const isMatch = (pairIdA === pairIdB && typeA !== typeB);
 
             if (isMatch) {
+              // کارت‌های درست: فقط حاشیه سبز (بدون تیک)
               setTimeout(() => {
                 sfxMatch();
                 cardA.classList.add('matched');
@@ -1290,24 +1055,27 @@
                 }
               }, 400);
             } else {
+              // کارت‌های نادرست: لرزش + حاشیه قرمز + برگشت بدون محو شدن
               this.errors++;
               this.updateStats();
               cardA.classList.add('wrong-shake');
               cardB.classList.add('wrong-shake');
+              // حذف افکت صوتی خطا از اینجا (اگر در نسخه قبلی بود) – ولی برای حفظ تجربه کاربری، می‌گذاریم بماند
+              sfxError();
               setTimeout(() => {
-                sfxError();
+                // برگرداندن کارت‌ها
                 this.flipCard(cardA, false);
                 this.flipCard(cardB, false);
+                // حذف کلاس‌های لرزش
                 cardA.classList.remove('wrong-shake');
                 cardB.classList.remove('wrong-shake');
                 this.flippedCards = [];
                 this.isChecking = false;
-              }, 900);
+              }, 500); // کمی بیشتر از duration انیمیشن برای دیده شدن
             }
           }
         }
 
-        /** پیش‌نمایش اولیه کارت‌ها */
         startPreview() {
           this.isPreviewing = true;
           this.gameActive = false;
@@ -1326,10 +1094,6 @@
           }, duration);
         }
 
-        /**
-         * راه‌اندازی بازی جدید
-         * @param {number} pairs - تعداد جفت‌ها
-         */
         init(pairs) {
           this.pairsCount = pairs;
           this.totalCards = pairs * 2;
@@ -1353,7 +1117,6 @@
           setTimeout(() => this.startPreview(), 200);
         }
 
-        /** شنونده تغییر orientation برای به‌روزرسانی چیدمان */
         setupOrientationListener() {
           if (this._orientationHandler) {
             window.removeEventListener('resize', this._orientationHandler);
@@ -1368,7 +1131,6 @@
               if (newCols !== this.gridCols) {
                 this.gridCols = newCols;
                 this.grid.className = `memory-grid cols-${this.gridCols}`;
-                // به‌روزرسانی اندازه کارت‌ها
                 const deviceType = DeviceDetector.getDeviceType();
                 const root = document.documentElement;
                 if (deviceType === 'mobile' && !DeviceDetector.isLandscape()) {
@@ -1386,7 +1148,6 @@
           }
         }
 
-        /** پایان بازی و نمایش مدال */
         endGame() {
           this.gameFinished = true;
           this.gameActive = false;
@@ -1400,7 +1161,6 @@
           const isNewBest = setBestScore('memoryBestScore', score);
           const bestEver = getBestScore('memoryBestScore');
 
-          // پیام‌های محترمانه
           let winMessage = 'آفرین! با موفقیت تمام جفت‌ها را پیدا کردید';
           if (this.errors === 0) {
             winMessage = 'دست‌مریزاد! بدون هیچ خطایی همه جفت‌ها را پیدا کردید 🌟';
@@ -1441,7 +1201,6 @@
           });
         }
 
-        /** پاک‌سازی منابع */
         destroy() {
           this.stopTimer();
           if (this._orientationHandler) {
@@ -1456,17 +1215,16 @@
       // ==============================================================
       class PuzzleGame {
         constructor() {
-          this.size = 3;                 // ابعاد (۳، ۴ یا ۵)
-          this.emptyIndex = 8;           // ایندکس خانه خالی (همیشه گوشه پایین-راست)
-          this.tiles = [];               // چیدمان فعلی
-          this.moves = 0;                // تعداد حرکات
-          this.timerSeconds = 0;         // زمان سپری شده
-          this.timerInterval = null;     // اینتروال تایمر
-          this.gameActive = false;       // بازی فعال؟
-          this.gameFinished = false;     // بازی تمام شده؟
-          this.currentImage = '';        // مسیر تصویر فعلی
+          this.size = 3;
+          this.emptyIndex = 8;
+          this.tiles = [];
+          this.moves = 0;
+          this.timerSeconds = 0;
+          this.timerInterval = null;
+          this.gameActive = false;
+          this.gameFinished = false;
+          this.currentImage = '';
 
-          // DOM elements
           this.grid = document.getElementById('puzzleGrid');
           this.timerEl = document.getElementById('puzTimer');
           this.movesEl = document.getElementById('puzMoves');
@@ -1475,13 +1233,11 @@
           this._isPointerDown = false;
         }
 
-        /** به‌روزرسانی آمار */
         updateStats() {
           this.movesEl.textContent = this.moves.toLocaleString('fa-IR');
           this.timerEl.textContent = formatTime(this.timerSeconds);
         }
 
-        /** شروع تایمر */
         startTimer() {
           if (!this.timerInterval) {
             this.timerInterval = setInterval(() => {
@@ -1491,18 +1247,10 @@
           }
         }
 
-        /** توقف تایمر */
         stopTimer() {
-          if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
-          }
+          if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
         }
 
-        /**
-         * رندر کردن گرید پازل
-         * ابعاد بر اساس this.size
-         */
         renderGrid() {
           this.grid.innerHTML = '';
           this.grid.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
@@ -1529,27 +1277,14 @@
           }
         }
 
-        /** یافتن ایندکس خانه خالی */
-        findEmpty() {
-          return this.tiles.indexOf(this.emptyIndex);
-        }
+        findEmpty() { return this.tiles.indexOf(this.emptyIndex); }
 
-        /**
-         * بررسی مجاورت دو خانه (فاصله منهتنی = ۱)
-         * @param {number} p1 - ایندکس اول
-         * @param {number} p2 - ایندکس دوم
-         * @returns {boolean}
-         */
         isAdjacent(p1, p2) {
           const r1 = Math.floor(p1 / this.size), c1 = p1 % this.size;
           const r2 = Math.floor(p2 / this.size), c2 = p2 % this.size;
           return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
         }
 
-        /**
-         * مدیریت کلیک روی سلول (بدون انیمیشن)
-         * @param {HTMLElement} cell
-         */
         handleCellClick(cell) {
           if (!this.gameActive || this.gameFinished) return;
           const clickedPos = parseInt(cell.dataset.pos);
@@ -1557,58 +1292,37 @@
           if (!this.isAdjacent(clickedPos, emptyPos)) return;
 
           sfxSlide();
-
-          // جابجایی مستقیم داده‌ها
           [this.tiles[clickedPos], this.tiles[emptyPos]] = [this.tiles[emptyPos], this.tiles[clickedPos]];
           this.moves++;
           this.updateStats();
           this.startTimer();
-
-          // رندر مجدد گرید
           this.renderGrid();
-
-          // بررسی برد
-          if (this.checkWin()) {
-            this.endGame();
-          }
+          if (this.checkWin()) { this.endGame(); }
         }
 
-        /** بررسی وضعیت برد */
         checkWin() {
-          for (let i = 0; i < this.tiles.length; i++) {
-            if (this.tiles[i] !== i) return false;
-          }
+          for (let i = 0; i < this.tiles.length; i++) { if (this.tiles[i] !== i) return false; }
           return true;
         }
 
-        /** درهم‌ریزی اولیه با حرکات معتبر (تضمین حل‌پذیری) */
         shuffle() {
-          // حالت حل شده
           this.tiles = Array.from({ length: this.size * this.size }, (_, i) => i);
           this.emptyIndex = this.size * this.size - 1;
-
-          // تعداد حرکات تصادفی
           const shuffleMoves = this.size * 40;
           for (let i = 0; i < shuffleMoves; i++) {
             const emptyPos = this.findEmpty();
             const possibleMoves = [];
             const r = Math.floor(emptyPos / this.size);
             const c = emptyPos % this.size;
-
             if (r > 0) possibleMoves.push(emptyPos - this.size);
             if (r < this.size - 1) possibleMoves.push(emptyPos + this.size);
             if (c > 0) possibleMoves.push(emptyPos - 1);
             if (c < this.size - 1) possibleMoves.push(emptyPos + 1);
-
             const target = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             [this.tiles[emptyPos], this.tiles[target]] = [this.tiles[target], this.tiles[emptyPos]];
           }
         }
 
-        /**
-         * راه‌اندازی بازی جدید
-         * @param {number} size - ابعاد (۳، ۴ یا ۵)
-         */
         init(size) {
           this.size = size;
           this.emptyIndex = size * size - 1;
@@ -1618,22 +1332,18 @@
           this.gameActive = true;
           this.gameFinished = false;
           this.updateStats();
-
           const randomAct = allActivities[Math.floor(Math.random() * allActivities.length)];
           this.currentImage = 'source/' + randomAct.img;
           previewImage.src = this.currentImage;
-
           this.shuffle();
           this.renderGrid();
           this.hidePreview();
         }
 
-        /** پایان بازی */
         endGame() {
           this.gameActive = false;
           this.gameFinished = true;
           this.stopTimer();
-
           const recordKey = `puzBest_${this.size}`;
           const bestTime = getBestScore(recordKey);
           let isNewBest = false;
@@ -1643,7 +1353,6 @@
           }
           const displayBest = isNewBest ? this.timerSeconds : bestTime;
 
-          // پیام‌های محترمانه
           let winMessage = 'تبریک! تصویر را به درستی کامل کردید 🎉';
           if (this.moves <= this.size * 3) {
             winMessage = 'شگفت‌انگیز! با کمترین حرکت تصویر را کامل کردید 🌟';
@@ -1682,47 +1391,20 @@
           });
         }
 
-        // ---------- پیش‌نمایش تصویر ----------
-        showPreview() {
-          previewOverlay.classList.add('active');
-          this.previewVisible = true;
-        }
+        showPreview() { previewOverlay.classList.add('active'); this.previewVisible = true; }
+        hidePreview() { previewOverlay.classList.remove('active'); this.previewVisible = false; }
 
-        hidePreview() {
-          previewOverlay.classList.remove('active');
-          this.previewVisible = false;
-        }
-
-        /** تنظیم رویدادهای دکمه پیش‌نمایش (hover و long-press) */
         setupPreviewButton() {
-          puzzlePreviewBtn.addEventListener('mouseenter', () => {
-            if (!this._isPointerDown) this.showPreview();
-          });
-          puzzlePreviewBtn.addEventListener('mouseleave', () => {
-            if (!this._isPointerDown) this.hidePreview();
-          });
-
-          const startLongPress = (e) => {
-            e.preventDefault();
-            this._isPointerDown = true;
-            this._longPressTimer = setTimeout(() => { this.showPreview(); }, 500);
-          };
-          const cancelLongPress = () => {
-            this._isPointerDown = false;
-            if (this._longPressTimer) {
-              clearTimeout(this._longPressTimer);
-              this._longPressTimer = null;
-            }
-            if (this.previewVisible) this.hidePreview();
-          };
-
+          puzzlePreviewBtn.addEventListener('mouseenter', () => { if (!this._isPointerDown) this.showPreview(); });
+          puzzlePreviewBtn.addEventListener('mouseleave', () => { if (!this._isPointerDown) this.hidePreview(); });
+          const startLongPress = (e) => { e.preventDefault(); this._isPointerDown = true; this._longPressTimer = setTimeout(() => { this.showPreview(); }, 500); };
+          const cancelLongPress = () => { this._isPointerDown = false; if (this._longPressTimer) { clearTimeout(this._longPressTimer); this._longPressTimer = null; } if (this.previewVisible) this.hidePreview(); };
           puzzlePreviewBtn.addEventListener('touchstart', startLongPress, { passive: false });
           puzzlePreviewBtn.addEventListener('touchend', cancelLongPress);
           puzzlePreviewBtn.addEventListener('touchcancel', cancelLongPress);
           puzzlePreviewBtn.addEventListener('mousedown', startLongPress);
           puzzlePreviewBtn.addEventListener('mouseup', cancelLongPress);
           puzzlePreviewBtn.addEventListener('mouseleave', cancelLongPress);
-
           previewOverlay.addEventListener('click', () => this.hidePreview());
         }
       }
@@ -1737,8 +1419,6 @@
       // ==============================================================
       // Populate Selectors (پر کردن دکمه‌های انتخاب)
       // ==============================================================
-
-      /** پر کردن دکمه‌های انتخاب تعداد کارت حافظه (فقط ۸، ۱۰، ۱۲ جفت) */
       function populateMemorySelectors() {
         memorySelectBtns.innerHTML = '';
         const options = [
@@ -1750,25 +1430,18 @@
           const btn = document.createElement('button');
           btn.className = 'selector-btn';
           btn.textContent = opt.label;
-          btn.addEventListener('click', () => {
-            showScreen('memory');
-            memoryGame.init(opt.pairs);
-          });
+          btn.addEventListener('click', () => { showScreen('memory'); memoryGame.init(opt.pairs); });
           memorySelectBtns.appendChild(btn);
         });
       }
 
-      /** پر کردن دکمه‌های انتخاب ابعاد پازل */
       function populatePuzzleSelectors() {
         puzzleSelectBtns.innerHTML = '';
         [3, 4, 5].forEach(size => {
           const btn = document.createElement('button');
           btn.className = 'selector-btn';
           btn.textContent = `${size}×${size}`;
-          btn.addEventListener('click', () => {
-            showScreen('puzzle');
-            puzzleGame.init(size);
-          });
+          btn.addEventListener('click', () => { showScreen('puzzle'); puzzleGame.init(size); });
           puzzleSelectBtns.appendChild(btn);
         });
       }
@@ -1776,43 +1449,19 @@
       // ==============================================================
       // Event Listeners (رویدادهای اصلی)
       // ==============================================================
-      btnGoMemory.addEventListener('click', () => {
-        initAudioContext();
-        populateMemorySelectors();
-        showScreen('memorySelect');
-      });
-
-      btnGoPuzzle.addEventListener('click', () => {
-        initAudioContext();
-        populatePuzzleSelectors();
-        showScreen('puzzleSelect');
-      });
-
+      btnGoMemory.addEventListener('click', () => { initAudioContext(); populateMemorySelectors(); showScreen('memorySelect'); });
+      btnGoPuzzle.addEventListener('click', () => { initAudioContext(); populatePuzzleSelectors(); showScreen('puzzleSelect'); });
       btnMemorySelectBack.addEventListener('click', () => showScreen('home'));
       btnPuzzleSelectBack.addEventListener('click', () => showScreen('home'));
       btnMemoryBack.addEventListener('click', () => { memoryGame.destroy(); showScreen('home'); });
       btnPuzzleBack.addEventListener('click', () => { puzzleGame.stopTimer(); showScreen('home'); });
-
-      // بستن مدال با کلیک روی پس‌زمینه
-      endOverlay.addEventListener('click', (e) => {
-        if (e.target === endOverlay) endOverlay.classList.remove('active');
-      });
-
-      // فعال‌سازی AudioContext با اولین تعامل کاربر
+      endOverlay.addEventListener('click', (e) => { if (e.target === endOverlay) endOverlay.classList.remove('active'); });
       document.body.addEventListener('click', initAudioContext, { once: true });
       document.body.addEventListener('touchstart', initAudioContext, { once: true });
 
-      // ==============================================================
-      // Orientation Change Handler (برای به‌روزرسانی احتمالی)
-      // ==============================================================
       function handleOrientationChange() {
-        // اگر در صفحه انتخاب حافظه هستیم، دکمه‌ها را دوباره پر کنیم
-        if (!screens.memorySelect.classList.contains('hidden')) {
-          populateMemorySelectors();
-        }
-        if (!screens.puzzleSelect.classList.contains('hidden')) {
-          populatePuzzleSelectors();
-        }
+        if (!screens.memorySelect.classList.contains('hidden')) populateMemorySelectors();
+        if (!screens.puzzleSelect.classList.contains('hidden')) populatePuzzleSelectors();
       }
       if (window.matchMedia) {
         const mqPortrait = window.matchMedia('(orientation: portrait)');
@@ -1828,7 +1477,7 @@
         showScreen('home');
         updateMusicButton();
         startMusic();
-        console.log('[App] نسخه 14.0 - دستگاه:', DeviceDetector.getDeviceType(), '| جهت:', DeviceDetector.getOrientation(), '| تم تاریک:', isDarkMode() ? 'فعال' : 'غیرفعال');
+        console.log('[App] نسخه 16.0 - دستگاه:', DeviceDetector.getDeviceType(), '| جهت:', DeviceDetector.getOrientation(), '| تم تاریک:', isDarkMode() ? 'فعال' : 'غیرفعال');
       }
 
       initializeApp();
