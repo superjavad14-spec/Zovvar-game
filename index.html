@@ -7,15 +7,12 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 13.0 — تاریخ: 2026-06-10
-    ویژگی‌های جدید:
-      - صفحه تبریک جایزه برای امتیاز ≥ 4500 در 24 کارت
-      - زمان پیش‌نمایش کاهش به 1.5 ثانیه
-      - افزایش جریمه خطا (هر خطا 100 امتیاز)
-      - قابلیت مخفی: 6 کلیک روی دکمه صدا + کلیک روی عنوان = صفحه تبریک
-      - دکمه‌های انتخاب به صورت عمودی (زیر هم) در صفحه هر مینی‌گیم
-      - افکت لرزش و قرمز با تاخیر 0.5-1 ثانیه
-      - رفع باگ محو شدن کارت‌های اشتباه (فقط flip بعد لرزش)
+    نسخه: 14.0 — تاریخ: 2026-06-11
+    تغییرات:
+      - عدم نمایش لوگو در صورت خطای بارگذاری (onerror)
+      - ایستراگ جدید: 10 کلیک روی صدا، نگه‌داشتن ایتا سپس سایت، کلیک روی عنوان
+      - جلوگیری از سواستفاده: دکمه "متوجه شدم" در حالت بازی و "فهمیدم" در ایستراگ
+      - نوشته "۱۲ جفت (۲۴ کارت)🎁" روی دکمه انتخاب و تذکر جایزه در شروع 24 کارت
       - حداقل 1300 خط کد
     ویژگی‌های پایدار:
       - صفحه خانه، لینک‌ها، تم تاریک/روشن خودکار
@@ -26,7 +23,7 @@
   -->
   <style>
     /* ================================================================
-       CSS Custom Properties
+       CSS Custom Properties (متغیرهای طراحی)
        ================================================================ */
     :root {
       --font-main: 'Yekan', 'Vazirmatn', 'Tahoma', sans-serif;
@@ -95,7 +92,6 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* الگوی تزئینی پس‌زمینه */
     body::before {
       content: ""; position: fixed; inset: 0;
       background-image:
@@ -119,8 +115,7 @@
     .home-title {
       font-size: 2.8rem; font-weight: 900; color: var(--maroon);
       text-shadow: 2px 2px 0px var(--gold-light); margin-bottom: 12px; line-height: 1.4;
-      cursor: pointer;
-      transition: color var(--transition-smooth);
+      cursor: pointer; transition: color var(--transition-smooth);
     }
     .home-title:hover { color: var(--maroon-light); }
     .home-subtitle {
@@ -144,6 +139,7 @@
       padding: 8px 16px; border-radius: 24px; background: var(--bg-surface);
       border: 1px solid var(--gold-pale); transition: all var(--transition-smooth);
       display: inline-flex; align-items: center; gap: 6px;
+      cursor: pointer;
     }
     .home-link:hover { background: var(--gold-pale); border-color: var(--gold); transform: translateY(-1px); }
 
@@ -196,8 +192,7 @@
       font-size: 1.5rem; font-weight: 900; color: var(--maroon);
       display: inline-block; background: var(--bg-surface); padding: 8px 28px;
       border-radius: 40px; box-shadow: var(--shadow-sm); border: 1px solid var(--gold-light);
-      cursor: pointer;
-      transition: color var(--transition-smooth);
+      cursor: pointer; transition: color var(--transition-smooth);
     }
     .org-name:hover { color: var(--maroon-light); }
 
@@ -442,7 +437,7 @@
     .btn-replay:hover { background: var(--gold-light); }
 
     /* ================================================================
-       صفحه تبریک ویژه
+       صفحه تبریک ویژه (جایزه)
        ================================================================ */
     .prize-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -490,6 +485,20 @@
       position: relative; z-index: 1;
     }
     .prize-close-btn:hover { background: var(--maroon-light); }
+
+    /* ================================================================
+       اعلان شناور (Toast)
+       ================================================================ */
+    .toast-notification {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--maroon); color: white; padding: 12px 24px;
+      border-radius: 30px; font-weight: 700; z-index: 400;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 2px solid var(--gold);
+      animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s forwards;
+      white-space: nowrap;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
 
     /* ================================================================
        ذرات شادی (Confetti)
@@ -578,13 +587,13 @@
       <button class="btn" id="btnGoPuzzle">🧩 تصویر به هم ریخته</button>
     </div>
     <div class="home-links">
-      <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="home-link">📝 عضویت</a>
-      <a href="https://zovvar.com" target="_blank" rel="noopener" class="home-link">🌐 وب‌سایت</a>
-      <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="home-link">📱 ایتا</a>
+      <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="home-link" id="linkEitaa">📱 ایتا</a>
+      <a href="https://zovvar.com" target="_blank" rel="noopener" class="home-link" id="linkSite">🌐 وب‌سایت</a>
+      <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="home-link" id="linkJoin">📝 عضویت</a>
     </div>
   </div>
 
-  <!-- صفحه انتخاب تعداد کارت (حافظه) - دکمه‌ها زیر هم -->
+  <!-- صفحه انتخاب تعداد کارت (حافظه) -->
   <div id="memorySelectScreen" class="screen hidden">
     <div class="game-header"><div class="org-name" id="memorySelectTitle">🎴 انتخاب تعداد کارت</div></div>
     <div class="card-count-selector">
@@ -607,7 +616,7 @@
     <button class="btn-control" id="btnMemoryBack">🏠 خانه</button>
   </div>
 
-  <!-- صفحه انتخاب ابعاد پازل - دکمه‌ها زیر هم -->
+  <!-- صفحه انتخاب ابعاد پازل -->
   <div id="puzzleSelectScreen" class="screen hidden">
     <div class="game-header"><div class="org-name" id="puzzleSelectTitle">🧩 انتخاب ابعاد پازل</div></div>
     <div class="card-count-selector"><p>اندازه پازل:</p><div class="selector-btns" id="puzzleSelectBtns"><!-- توسط JS پر می‌شود --></div></div>
@@ -682,11 +691,15 @@
       const puzzlePreviewBtn = document.getElementById('puzzlePreviewBtn');
       const previewOverlay = document.getElementById('previewOverlay');
       const previewImage = document.getElementById('previewImage');
+      // عناوین برای ایستراگ
       const homeTitle = document.getElementById('homeTitle');
       const memorySelectTitle = document.getElementById('memorySelectTitle');
       const memoryGameTitle = document.getElementById('memoryGameTitle');
       const puzzleSelectTitle = document.getElementById('puzzleSelectTitle');
       const puzzleGameTitle = document.getElementById('puzzleGameTitle');
+      // لینک‌های خانه برای ایستراگ
+      const linkEitaa = document.getElementById('linkEitaa');
+      const linkSite = document.getElementById('linkSite');
 
       // ---------- Device Detector ----------
       const DeviceDetector = {
@@ -729,39 +742,125 @@
 
       // ---------- Music Controller ----------
       let musicPlaying = true; bgMusic.volume=0.4;
+      // متغیرهای ایستراگ
       let musicClickCount = 0;
+      let easterEggStep = 'music'; // 'music', 'holdEitaa', 'holdSite', 'done'
+      let holdTimer = null;
+
       function updateMusicBtn(){ musicToggle.textContent = musicPlaying ? '🔊' : '🔇'; musicToggle.classList.toggle('playing', musicPlaying); }
       function startMusic(){ initAudio(); bgMusic.play().then(()=>{ musicPlaying=true; updateMusicBtn(); }).catch(()=>{ musicPlaying=false; updateMusicBtn(); }); }
+
+      // رویداد کلیک روی دکمه صدا
       musicToggle.addEventListener('click', ()=>{
         initAudio();
         if(musicPlaying){ bgMusic.pause(); musicPlaying=false; } else { bgMusic.play().catch(()=>{}); musicPlaying=true; }
         updateMusicBtn();
-        // شمارش کلیک‌های مخفی
-        musicClickCount++;
-        console.log('[Secret] Music click:', musicClickCount);
+
+        // منطق ایستراگ: شمارش کلیک‌ها
+        if (easterEggStep === 'music') {
+          musicClickCount++;
+          if (musicClickCount === 10) {
+            // رسیدیم به ۱۰ کلیک، حالا منتظر نگه داشتن روی دکمه‌ها هستیم
+            easterEggStep = 'holdEitaa';
+            console.log('[EasterEgg] موسیقی ۱۰ بار کلیک شد، منتظر نگه داشتن ایتا');
+          } else if (musicClickCount > 10) {
+            // اگر بیش از ۱۰ کلیک شود، ریست می‌کنیم
+            resetEasterEgg();
+          }
+        } else {
+          // اگر در مرحله دیگری کلیک روی صدا شود، کل فرایند ریست می‌شود
+          resetEasterEgg();
+        }
       });
 
+      // تابع ریست کردن ایستراگ
+      function resetEasterEgg() {
+        musicClickCount = 0;
+        easterEggStep = 'music';
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+        console.log('[EasterEgg] ریست شد');
+      }
+
       // ---------- Prize Overlay Functions ----------
-      function showPrizeOverlay() {
+      let prizeTriggerSource = 'game'; // 'game' or 'easter'
+
+      function showPrizeOverlay(source) {
+        prizeTriggerSource = source || 'game';
+        const btnText = prizeTriggerSource === 'easter' ? 'فهمیدم' : 'متوجه شدم';
+        btnPrizeClose.textContent = btnText;
         prizeOverlay.classList.add('active');
         sfxPrize();
         spawnConfetti(200);
       }
+
       btnPrizeClose.addEventListener('click', () => {
         prizeOverlay.classList.remove('active');
+        // بعد از بستن جایزه، ریست ایستراگ (اگر از ایستراگ آمده باشد)
+        if (prizeTriggerSource === 'easter') resetEasterEgg();
       });
       prizeOverlay.addEventListener('click', (e) => {
-        if (e.target === prizeOverlay) prizeOverlay.classList.remove('active');
+        if (e.target === prizeOverlay) {
+          prizeOverlay.classList.remove('active');
+          if (prizeTriggerSource === 'easter') resetEasterEgg();
+        }
       });
 
-      // ---------- Title Click Handler (ایستراگ) ----------
-      function handleTitleClick() {
-        if (musicClickCount >= 6) {
-          console.log('[Secret] Easter egg activated!');
-          showPrizeOverlay();
-          musicClickCount = 0;
-        }
+      // ---------- Long-press Handler for Links ----------
+      function setupLongPress(element, callback, duration = 800) {
+        let timer;
+        const start = (e) => {
+          e.preventDefault();
+          timer = setTimeout(() => {
+            timer = null;
+            callback();
+          }, duration);
+        };
+        const cancel = () => {
+          if (timer) { clearTimeout(timer); timer = null; }
+        };
+        element.addEventListener('mousedown', start);
+        element.addEventListener('touchstart', start, { passive: false });
+        element.addEventListener('mouseup', cancel);
+        element.addEventListener('mouseleave', cancel);
+        element.addEventListener('touchend', cancel);
+        element.addEventListener('touchcancel', cancel);
+        // جلوگیری از کلیک عادی هنگام نگه داشتن (اگر callback اجرا شد)
+        element.addEventListener('click', (e) => {
+          // اگر تایمر وجود نداشته باشد یعنی نگه داشتن انجام شده، پس کلیک را متوقف کن
+          if (!timer) e.preventDefault();
+        });
       }
+
+      // مرحله اول: نگه داشتن روی ایتا
+      setupLongPress(linkEitaa, () => {
+        if (easterEggStep === 'holdEitaa') {
+          easterEggStep = 'holdSite';
+          console.log('[EasterEgg] ایتا نگه داشته شد، منتظر سایت');
+        } else {
+          resetEasterEgg();
+        }
+      });
+
+      // مرحله دوم: نگه داشتن روی سایت
+      setupLongPress(linkSite, () => {
+        if (easterEggStep === 'holdSite') {
+          easterEggStep = 'titleClick';
+          console.log('[EasterEgg] سایت نگه داشته شد، حالا روی عنوان کلیک کنید');
+        } else {
+          resetEasterEgg();
+        }
+      });
+
+      // ---------- Title Click Handler (پایان ایستراگ) ----------
+      function handleTitleClick() {
+        if (easterEggStep === 'titleClick') {
+          console.log('[EasterEgg] عنوان کلیک شد! نمایش جایزه');
+          showPrizeOverlay('easter');
+          resetEasterEgg();
+        }
+        // در غیر این صورت، کلیک روی عنوان تأثیری ندارد
+      }
+
       homeTitle.addEventListener('click', handleTitleClick);
       memorySelectTitle.addEventListener('click', handleTitleClick);
       memoryGameTitle.addEventListener('click', handleTitleClick);
@@ -785,13 +884,14 @@
       function isDarkMode() { return darkModeQuery.matches; }
       function getLogoUrl() { return isDarkMode() ? 'source/logo1.jpg' : 'source/logo2.png'; }
 
-      // ---------- SVG Card Back ----------
+      // ---------- SVG Card Back (با هندل خطای لوگو) ----------
       function generateCardBackSVG() {
         const logo = getLogoUrl();
         const bg = isDarkMode() ? '#2a2a3a' : '#fdf8f0';
         const borderColor = isDarkMode() ? '#c9a84c' : '#d4af37';
         const accentColor = isDarkMode() ? '#a68b2c' : '#e0c878';
         const patternColor = isDarkMode() ? 'rgba(201,168,76,0.2)' : 'rgba(212,175,55,0.25)';
+        // در صورت خطا، لوگو مخفی شود
         return `
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 250" preserveAspectRatio="xMidYMid meet">
           <defs>
@@ -813,7 +913,11 @@
           <path d="M135 35 Q150 25 165 35" fill="none" stroke="${borderColor}" stroke-width="2" opacity="0.9"/>
           <path d="M35 215 Q50 225 65 215" fill="none" stroke="${borderColor}" stroke-width="2" opacity="0.9"/>
           <path d="M135 215 Q150 225 165 215" fill="none" stroke="${borderColor}" stroke-width="2" opacity="0.9"/>
-          <image x="45" y="70" width="110" height="110" xlink:href="${logo}" preserveAspectRatio="xMidYMid meet" opacity="0.95"/>
+          <!-- لوگو با مدیریت خطا -->
+          <image x="45" y="70" width="110" height="110" 
+                 href="${logo}" xlink:href="${logo}"
+                 preserveAspectRatio="xMidYMid meet" opacity="0.95"
+                 onerror="this.setAttribute('opacity','0'); this.setAttribute('width','0'); this.setAttribute('height','0');" />
           <circle cx="45" cy="70" r="4" fill="${borderColor}" opacity="0.5"/>
           <circle cx="155" cy="70" r="4" fill="${borderColor}" opacity="0.5"/>
           <circle cx="45" cy="180" r="4" fill="${borderColor}" opacity="0.5"/>
@@ -826,15 +930,26 @@
       }
       darkModeQuery.addEventListener('change', () => { updateAllCardBacks(); });
 
+      // نمایش اعلان شناور (Toast)
+      function showToast(message) {
+        const existing = document.querySelector('.toast-notification');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+      }
+
       function showScreen(id) {
         Object.values(screens).forEach(s => s.classList.add('hidden'));
         if (screens[id]) screens[id].classList.remove('hidden');
         endOverlay.classList.remove('active');
-        // prizeOverlay فقط با دکمه بسته شود
+        // prizeOverlay بسته نمی‌شود مگر با دکمه خودش
       }
 
       // ============================================================
-      //  MemoryGame Class (اصلاح‌شده)
+      //  MemoryGame Class
       // ============================================================
       class MemoryGame {
         constructor() {
@@ -906,7 +1021,6 @@
             const [a,b]=this.flipped;
             const isMatch=(a.dataset.pairId===b.dataset.pairId)&&(a.dataset.type!==b.dataset.type);
             if(isMatch){
-              // جفت درست: تاخیر 0.5 ثانیه سپس حاشیه سبز
               setTimeout(()=>{
                 sfxMatch();
                 a.classList.add('matched'); b.classList.add('matched');
@@ -915,12 +1029,10 @@
                 if(this.matched.size===this.pairs) this.endGame();
               }, 500);
             } else {
-              // جفت نادرست: تاخیر 0.7 ثانیه، سپس لرزش + حاشیه قرمز، سپس flip
               this.errors++; this.updateStats();
               setTimeout(()=>{
                 sfxError();
                 a.classList.add('wrong-highlight'); b.classList.add('wrong-highlight');
-                // بعد از لرزش، کارت‌ها برگردند
                 setTimeout(()=>{
                   a.classList.remove('wrong-highlight'); b.classList.remove('wrong-highlight');
                   this.flip(a,false); this.flip(b,false);
@@ -934,7 +1046,7 @@
           this.preview=true; this.active=false;
           const all=this.grid.querySelectorAll('.card-container');
           all.forEach(c=>this.flip(c,true));
-          const previewDuration = 1500; // 1.5 ثانیه
+          const previewDuration = 1500;
           setTimeout(()=>{
             all.forEach(c=>{ if(!c.classList.contains('matched')) this.flip(c,false); });
             this.preview=false; this.active=true; this.startTimer();
@@ -949,16 +1061,19 @@
           const selected=shuffle(allActivities).slice(0,pairs);
           this.cards=shuffle(this.buildCards(selected));
           this.renderGrid(this.cards);
+          // اگر ۱۲ جفت (۲۴ کارت) انتخاب شده باشد، تذکر نمایش داده شود
+          if (pairs === 12) {
+            showToast('🎁 امتیاز ۴۵۰۰ به بالا جایزه دارد!');
+          }
           setTimeout(()=>this.startPreview(),200);
         }
         endGame(){
           this.done=true; this.active=false; this.stopTimer();
-          const score=Math.max(0, 5000 - this.errors*100 - this.sec*4); // جریمه خطا 100
+          const score=Math.max(0, 5000 - this.errors*100 - this.sec*4);
           const isNew=setBest('memBest',score);
-          // بررسی امتیاز ≥ 4500 برای 24 کارت
           if(this.total===24 && score>=4500){
             endOverlay.classList.remove('active');
-            setTimeout(()=>{ showPrizeOverlay(); }, 500);
+            setTimeout(()=>{ showPrizeOverlay('game'); }, 500);
           }
           endModal.innerHTML=`
             <div style="font-size:3rem;">🏆</div>
@@ -1080,16 +1195,22 @@
       // ---------- Populate Selectors (دکمه‌های زیر هم) ----------
       function populateMemorySelectors() {
         memorySelectBtns.innerHTML='';
-        [12,10,8].forEach(p=>{
+        // ترتیب: ۱۲ جفت (۲۴ کارت) با نشان ویژه، ۱۰ جفت، ۸ جفت
+        const options = [
+          { pairs: 12, label: '۱۲ جفت (۲۴ کارت) 🎁' },
+          { pairs: 10, label: '۱۰ جفت (۲۰ کارت)' },
+          { pairs: 8, label: '۸ جفت (۱۶ کارت)' }
+        ];
+        options.forEach(opt => {
           const btn=document.createElement('button'); btn.className='selector-btn';
-          btn.textContent=`${p} جفت (${p*2} کارت)`;
-          btn.addEventListener('click',()=>{ showScreen('memory'); memoryGame.init(p); });
+          btn.textContent=opt.label;
+          btn.addEventListener('click',()=>{ showScreen('memory'); memoryGame.init(opt.pairs); });
           memorySelectBtns.appendChild(btn);
         });
       }
       function populatePuzzleSelectors() {
         puzzleSelectBtns.innerHTML='';
-        [3,4,5].forEach(s=>{
+        [5,4,3].forEach(s=>{
           const btn=document.createElement('button'); btn.className='selector-btn';
           btn.textContent=`${s}×${s}`;
           btn.addEventListener('click',()=>{ showScreen('puzzle'); puzzleGame.init(s); });
