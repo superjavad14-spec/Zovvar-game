@@ -7,17 +7,18 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 16.0 — تاریخ: 2026-06-12
+    نسخه: 17.0 — تاریخ: 2026-06-12
     تغییرات جدید:
-      - تم تاریک: پشت کارت‌ها روشن‌تر شود
-      - استفاده از logo2.png در هر دو تم (حذف وابستگی به logo1.jpg)
+      - ضریب زمان در امتیاز حافظه به ۵ افزایش یافت
+      - دکمه توضیحات به زیر دکمه‌های بازی منتقل شد
+      - ایستراگ جدید: ۶+ کلیک صدا + کلیک عنوان → پیام مخصوص
       - عدم کاهش حجم کد (حداقل ۱۱۰۰ خط)
     ویژگی‌های پایدار:
       - صفحه خانه، لینک‌ها، توضیحات
       - حافظه 16/20/24 کارتی با چیدمان واکنش‌گرا
       - پازل 3×3/4×4/5×5 (بدون انیمیشن حرکت)
       - موسیقی، افکت‌های صوتی، رکوردها، ذرات شادی
-      - ایستراگ، جایزه 4500+
+      - ایستراگ اصلی، جایزه 4500+
     ============================================================
   -->
   <style>
@@ -90,7 +91,6 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* الگوی تزئینی پس‌زمینه */
     body::before {
       content: ""; position: fixed; inset: 0;
       background-image:
@@ -121,7 +121,12 @@
       font-size: 1.15rem; color: var(--text-soft); margin-bottom: 24px; font-weight: 500;
     }
     .home-subtitle strong { color: var(--maroon); font-weight: 800; }
-    .btn-group { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 340px; align-items: center; margin-bottom: 24px; }
+    .btn-group { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 340px; align-items: center; margin-bottom: 12px; }
+
+    /* دکمه توضیحات زیر گزینه‌های بازی */
+    .help-section {
+      margin-bottom: 20px;
+    }
 
     .home-links {
       display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -141,17 +146,6 @@
       cursor: pointer;
     }
     .home-link:hover { background: var(--gold-pale); border-color: var(--gold); transform: translateY(-1px); }
-
-    /* دکمه توضیحات */
-    .btn-info {
-      background: var(--bg-surface); border: 2px solid var(--gold);
-      color: var(--maroon); font-family: inherit; font-weight: 700;
-      font-size: 1rem; padding: 12px 28px; border-radius: var(--radius-btn);
-      cursor: pointer; box-shadow: var(--shadow-sm);
-      transition: background var(--transition-smooth), border-color var(--transition-smooth);
-      margin-top: 8px; width: auto; display: inline-flex; align-items: center; gap: 8px;
-    }
-    .btn-info:hover { background: #fdf8f0; border-color: var(--maroon); }
 
     /* ================================================================
        دکمه‌های عمومی
@@ -193,6 +187,17 @@
       width: 100%; max-width: 300px;
     }
     .selector-btn:hover { background: var(--gold-pale); border-color: var(--maroon); transform: translateY(-1px); }
+
+    /* دکمه توضیحات */
+    .btn-info {
+      background: var(--bg-surface); border: 2px solid var(--gold);
+      color: var(--maroon); font-family: inherit; font-weight: 700;
+      font-size: 1rem; padding: 12px 28px; border-radius: var(--radius-btn);
+      cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: background var(--transition-smooth), border-color var(--transition-smooth);
+      width: auto; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-info:hover { background: #fdf8f0; border-color: var(--maroon); }
 
     /* ================================================================
        هدر بازی‌ها
@@ -485,10 +490,6 @@
       font-size: 1.1rem; color: var(--maroon); font-weight: 700;
       line-height: 1.8; margin: 12px 0; position: relative; z-index: 1;
     }
-    .prize-modal .prize-note {
-      font-size: 0.8rem; color: var(--text-soft); margin-top: 12px;
-      position: relative; z-index: 1;
-    }
     .prize-close-btn {
       background: var(--maroon); color: white; border: 2px solid var(--gold);
       padding: 10px 28px; border-radius: 30px; font-weight: 700;
@@ -518,15 +519,33 @@
       margin-bottom: 12px;
       font-size: 1.2rem;
     }
-    .help-content-box p {
-      margin-bottom: 10px;
-    }
+    .help-content-box p { margin-bottom: 10px; }
     .help-content-box .highlight {
       background: var(--gold-pale);
       padding: 2px 8px;
       border-radius: 6px;
       font-weight: 700;
     }
+
+    /* ================================================================
+       پیام مخفی (ایستراگ جدید)
+       ================================================================ */
+    .secret-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center; z-index: 600;
+      opacity: 0; visibility: hidden; transition: opacity 0.4s;
+    }
+    .secret-overlay.active { opacity: 1; visibility: visible; }
+    .secret-modal {
+      background: var(--bg-surface);
+      border-radius: 24px; padding: 28px 20px;
+      text-align: center; max-width: 400px; width: 90%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      border: 3px solid var(--gold);
+      animation: modalPopIn 0.4s ease;
+    }
+    .secret-modal h3 { color: var(--maroon); margin-bottom: 16px; }
+    .secret-modal p { color: var(--text-dark); line-height: 1.8; }
 
     /* ================================================================
        اعلان شناور (Toast)
@@ -587,6 +606,7 @@
       .card-front { background: linear-gradient(160deg, #2a2a35, #1e1e2a); }
       .prize-modal { background: linear-gradient(135deg, #2a2a35, #1e1e2f); }
       .help-content-box { background: #1e1e2f; border-color: #4a3a20; }
+      .secret-modal { background: #1e1e2f; }
     }
 
     /* ================================================================
@@ -628,12 +648,15 @@
       <button class="btn" id="btnGoMemory">🧠 بازی حافظه</button>
       <button class="btn" id="btnGoPuzzle">🧩 تصویر به هم ریخته</button>
     </div>
+    <!-- دکمه توضیحات زیر گزینه‌های بازی -->
+    <div class="help-section">
+      <button class="btn-info" id="btnGoHelp">📖 توضیحات</button>
+    </div>
     <div class="home-links">
       <a href="https://eitaa.com/zovvaralzahra" target="_blank" rel="noopener" class="home-link" id="linkEitaa">📱 ایتا</a>
       <a href="https://zovvar.com" target="_blank" rel="noopener" class="home-link" id="linkSite">🌐 وب‌سایت</a>
       <a href="https://formafzar.com/form/omi1j" target="_blank" rel="noopener" class="home-link" id="linkJoin">📝 عضویت</a>
     </div>
-    <button class="btn-info" id="btnGoHelp">📖 توضیحات</button>
   </div>
 
   <!-- صفحه توضیحات -->
@@ -711,6 +734,17 @@
     </div>
   </div>
 
+  <!-- صفحه ایستراگ جدید (پیام مخفی) -->
+  <div id="secretOverlay" class="secret-overlay">
+    <div class="secret-modal">
+      <h3>🏅 تبریک</h3>
+      <p>شما این صفحه مخفی را پیدا کردید<br><br>
+      اگر فکر کردی جایزه میدهیم اشتباه کردی<br><br>
+      برو و عادلانه بازی کن و جایزه بگیر</p>
+      <button class="prize-close-btn" id="btnSecretClose">باشه</button>
+    </div>
+  </div>
+
   <!-- محفظه ذرات شادی -->
   <div id="confettiContainer" class="confetti-wrap"></div>
   <!-- دکمه موسیقی -->
@@ -746,6 +780,8 @@
       const endModal = document.getElementById('endModal');
       const prizeOverlay = document.getElementById('prizeOverlay');
       const btnPrizeClose = document.getElementById('btnPrizeClose');
+      const secretOverlay = document.getElementById('secretOverlay');
+      const btnSecretClose = document.getElementById('btnSecretClose');
       const confettiContainer = document.getElementById('confettiContainer');
       const bgMusic = document.getElementById('bgMusic');
       const musicToggle = document.getElementById('musicToggle');
@@ -802,7 +838,7 @@
       // ========== Music Controller ==========
       let musicPlaying = true; bgMusic.volume=0.4;
       let musicClickCount = 0;
-      let easterEggStep = 'music';
+      let easterEggStep = 'music'; // 'music', 'holdEitaa', 'holdSite', 'titleClick'
       let holdTimer = null;
 
       function updateMusicBtn(){ musicToggle.textContent = musicPlaying ? '🔊' : '🔇'; musicToggle.classList.toggle('playing', musicPlaying); }
@@ -812,6 +848,7 @@
         initAudio();
         if(musicPlaying){ bgMusic.pause(); musicPlaying=false; } else { bgMusic.play().catch(()=>{}); musicPlaying=true; }
         updateMusicBtn();
+        // ایستراگ اصلی: 10 کلیک برای شروع مرحله بعدی
         if (easterEggStep === 'music') {
           musicClickCount++;
           if (musicClickCount === 10) {
@@ -820,6 +857,7 @@
             resetEasterEgg();
           }
         } else {
+          // اگر در مرحله دیگری هستیم، کلیک روی صدا باعث ریست شدن فرآیند می‌شود
           resetEasterEgg();
         }
       });
@@ -850,7 +888,16 @@
         }
       });
 
-      // Long-press for links (Easter egg)
+      // ========== Secret Overlay (ایستراگ جدید) ==========
+      function showSecretOverlay() {
+        secretOverlay.classList.add('active');
+        // sound? optional, use a different tone
+        initAudio(); tone(800,0.2,'square',0.3);
+      }
+      btnSecretClose.addEventListener('click', () => { secretOverlay.classList.remove('active'); });
+      secretOverlay.addEventListener('click', (e) => { if (e.target === secretOverlay) secretOverlay.classList.remove('active'); });
+
+      // ========== Long-press for links (Easter egg main) ==========
       function setupLongPress(element, callback, duration = 800) {
         let timer;
         const start = (e) => { e.preventDefault(); timer = setTimeout(() => { timer = null; callback(); }, duration); };
@@ -875,12 +922,23 @@
         } else { resetEasterEgg(); }
       });
 
+      // ========== Title Click Handler (ایستراگ اصلی + ایستراگ جدید) ==========
       function handleTitleClick() {
+        // بررسی ایستراگ اصلی (پس از تکمیل مراحل)
         if (easterEggStep === 'titleClick') {
           showPrizeOverlay('easter');
           resetEasterEgg();
+          return;
         }
+        // ایستراگ جدید: اگر حداقل ۶ کلیک صدا انجام شده و هنوز در مرحله music هستیم
+        if (easterEggStep === 'music' && musicClickCount >= 6) {
+          showSecretOverlay();
+          resetEasterEgg();
+          return;
+        }
+        // در غیر این صورت هیچ اتفاقی نمی‌افتد
       }
+
       homeTitle.addEventListener('click', handleTitleClick);
       memorySelectTitle.addEventListener('click', handleTitleClick);
       memoryGameTitle.addEventListener('click', handleTitleClick);
@@ -913,14 +971,11 @@
       function isDarkMode() { return darkModeQuery.matches; }
 
       function generateCardBackSVG() {
-        // همیشه از logo2.png استفاده می‌شود
         const logo = 'source/logo2.png';
-        // در تم تاریک: پس‌زمینه روشن‌تر برای دیده شدن لوگو
         const bg = isDarkMode() ? '#f0e6d3' : '#fdf8f0';
         const borderColor = isDarkMode() ? '#b8960c' : '#d4af37';
         const accentColor = isDarkMode() ? '#d4af37' : '#e0c878';
         const patternColor = isDarkMode() ? 'rgba(180,150,30,0.25)' : 'rgba(212,175,55,0.25)';
-        const textColor = isDarkMode() ? '#3d1c1c' : '#3d1c1c';
         return `
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 250" preserveAspectRatio="xMidYMid meet">
           <defs>
@@ -970,7 +1025,7 @@
             <h3>🧠 راهنمای بازی کارت حافظه</h3>
             <p>در این بازی <span class="highlight">جفت‌های مرتبط</span> (یک کارت متن و یک کارت تصویر) را پیدا کنید.</p>
             <p><strong>نحوه بازی:</strong> ابتدا همه کارت‌ها برای <span class="highlight">۱.۵ ثانیه</span> نمایش داده می‌شوند، سپس برگردانده می‌شوند. شما باید با کلیک روی کارت‌ها، جفت‌ها را بیابید.</p>
-            <p><strong>امتیازدهی:</strong> امتیاز = <span class="highlight">۵۰۰۰ - (خطاها × ۱۰۰) - (زمان × ۴)</span></p>
+            <p><strong>امتیازدهی:</strong> امتیاز = <span class="highlight">۵۰۰۰ - (خطاها × ۱۰۰) - (زمان × ۵)</span></p>
             <p><strong>شرط جایزه:</strong> اگر در حالت <span class="highlight">۲۴ کارت</span> امتیاز شما <span class="highlight">۴۵۰۰</span> یا بیشتر شود، برنده جایزه ویژه خواهید شد!</p>
             <p>با دقت و سرعت عمل کنید تا بالاترین امتیاز را کسب کنید.</p>
           `;
@@ -1145,7 +1200,7 @@
         }
         endGame(){
           this.done=true; this.active=false; this.stopTimer();
-          const score=Math.max(0, 5000 - this.errors*100 - this.sec*4);
+          const score=Math.max(0, 5000 - this.errors*100 - this.sec*5); // ضریب زمان ۵
           const isNew=setBest('memBest',score);
           if(this.total===24 && score>=4500){
             endOverlay.classList.remove('active');
