@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>هیئت زوارالزهرا | بازی‌های حافظه و پازل</title>
   
-  <!-- Preload تصاویر بازی حافظه برای بارگذاری سریع -->
+  <!-- ============================= -->
+  <!-- Preload تصاویر برای بارگذاری سریع -->
+  <!-- ============================= -->
   <link rel="preload" href="source/arbain.jpg" as="image">
   <link rel="preload" href="source/borhan.jpg" as="image">
   <link rel="preload" href="source/haftegi.jpg" as="image">
@@ -18,7 +20,6 @@
   <link rel="preload" href="source/shomal.jpg" as="image">
   <link rel="preload" href="source/sire.jpg" as="image">
   <link rel="preload" href="source/clas.jpg" as="image">
-  <!-- Preload لوگوی هیئت -->
   <link rel="preload" href="source/logo2.png" as="image">
   
   <style>
@@ -71,7 +72,7 @@
     }
 
     /* ================================================================
-       Reset سراسری (حذف margin و padding پیش‌فرض)
+       Reset سراسری (حذف margin و padding پیش‌فرض مرورگر)
        ================================================================ */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -422,7 +423,7 @@
     .help-content-box .highlight { background: var(--gold-pale); padding: 2px 8px; border-radius: 6px; font-weight: 700; }
 
     /* ================================================================
-       پیام مخفی (Easter Egg جدید)
+       پیام مخفی (Easter Egg شوخی)
        ================================================================ */
     .secret-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 600; opacity: 0; visibility: hidden; transition: opacity 0.4s; }
     .secret-overlay.active { opacity: 1; visibility: visible; }
@@ -580,7 +581,7 @@
     </div>
   </div>
 
-  <!-- صفحه پیام مخفی (ایستراگ جدید) -->
+  <!-- صفحه پیام مخفی (ایستراگ شوخی) -->
   <div id="secretOverlay" class="secret-overlay">
     <div class="secret-modal">
       <h3>🏅 تبریک</h3>
@@ -680,7 +681,7 @@
       function sfxError(){ initAudio(); tone(180,0.15,'triangle',0.12); }
       function sfxWin(){ initAudio(); [523,659,784,1047].forEach((f,i)=>tone(f,0.15,'sine',0.3,i*0.1)); }
       function sfxSlide(){ initAudio(); tone(350,0.08,'sine',0.15); }
-      function sfxSpinTick(){ initAudio(); tone(200,0.05,'triangle',0.08); }
+      function sfxSpinTick(){ initAudio(); tone(200,0.05,'triangle',0.08); }  // صدای چرخش گردونه
       function sfxPrize(){ initAudio(); [784,1047,1318,1568].forEach((f,i)=>tone(f,0.2,'sine',0.35,i*0.15)); }
 
       // ========== Music Controller (کنترل موسیقی) ==========
@@ -708,8 +709,9 @@
           this.resultEl = resultEl;
           this.noteEl = noteEl;
           this.spinBtn = spinBtn;
-          this.items = [];             // آیتم‌های گردونه
-          this.totalWeight = 0;       // مجموع شانس‌ها
+          this.items = [];             // آیتم‌های گردونه (همه نمایش داده می‌شوند)
+          this.validItems = [];        // آیتم‌های با شانس > 0 (فقط این‌ها شانس انتخاب دارند)
+          this.totalWeight = 0;       // مجموع شانس‌های validItems
           this.currentRotation = 0;   // زاویه فعلی (رادیان)
           this.spinning = false;
           this.hasSpun = false;       // فقط یک بار چرخش مجاز است
@@ -732,7 +734,14 @@
               { label: 'پوستر', weight: 4 }
             ];
           } finally {
-            this.totalWeight = this.items.reduce((sum, item) => sum + item.weight, 0);
+            // جدا کردن آیتم‌های معتبر (شانس > 0)
+            this.validItems = this.items.filter(item => item.weight > 0);
+            // اگر هیچ آیتم معتبری نبود، یک آیتم پیش‌فرض با شانس 1 اضافه کن
+            if (this.validItems.length === 0) {
+              this.validItems = [{ label: 'شانس مجدد', weight: 1 }];
+              this.items = [{ label: 'شانس مجدد', weight: 1 }];
+            }
+            this.totalWeight = this.validItems.reduce((sum, item) => sum + item.weight, 0);
             this.drawWheel(0);
           }
         }
@@ -742,19 +751,16 @@
           const lines = text.split('\n').filter(line => line.trim() !== '');
           this.items = [];
           lines.forEach(line => {
-            // فرمت: "نام":عدد
             const parts = line.split(':');
             if (parts.length === 2) {
               let label = parts[0].trim().replace(/"/g, '');
               const weight = parseInt(parts[1].trim(), 10);
-              if (!isNaN(weight) && weight > 0) { // فقط شانس > 0
+              if (!isNaN(weight) && weight >= 0) { // شانس 0 هم مجاز است (نمایش داده می‌شود)
                 this.items.push({ label, weight });
               }
             }
           });
-          if (this.items.length === 0) { // اگر هیچ آیتم معتبری نبود
-            this.items = [{ label: 'شانس مجدد', weight: 1 }];
-          }
+          if (this.items.length === 0) this.items = [{ label: 'آیتم پیش‌فرض', weight: 1 }];
         }
 
         /** رسم گردونه روی Canvas */
@@ -767,7 +773,6 @@
           const radius = Math.min(centerX, centerY) - 8;
 
           ctx.clearRect(0, 0, w, h);
-
           if (this.items.length === 0) return;
 
           const angleStep = (2 * Math.PI) / this.items.length;
@@ -816,35 +821,52 @@
           ctx.fillText('🎰', centerX, centerY + 6);
         }
 
-        /** انتخاب برنده بر اساس شانس */
+        /** انتخاب برنده بر اساس شانس (فقط از validItems) */
         pickWinner() {
+          if (this.validItems.length === 0) return 0; // fallback
           const rand = Math.random() * this.totalWeight;
           let cumulative = 0;
-          for (let i = 0; i < this.items.length; i++) {
-            cumulative += this.items[i].weight;
-            if (rand <= cumulative) return i;
+          for (let i = 0; i < this.validItems.length; i++) {
+            cumulative += this.validItems[i].weight;
+            if (rand <= cumulative) return i; // ایندکس در validItems
           }
           return 0;
         }
 
         /** انیمیشن چرخش */
-        animate(targetIndex) {
+        animate(winnerIndexInValid) {
           if (this.spinning) return;
           this.spinning = true;
           this.hasSpun = true;
           this.spinBtn.disabled = true;
 
-          const targetAngle = (targetIndex + 1) * (2 * Math.PI / this.items.length) + (Math.PI / 2); // +90deg offset
-          const totalSpin = targetAngle + (2 * Math.PI * 4); // 4 دور کامل + هدف
+          const winnerItem = this.validItems[winnerIndexInValid];
+          // پیدا کردن ایندکس این آیتم در this.items (برای رسم)
+          const winnerIndexInAll = this.items.indexOf(winnerItem);
+          if (winnerIndexInAll === -1) return; // خطا
+
+          const angleStep = (2 * Math.PI) / this.items.length;
+          // زاویه شروع قطعه برنده در حالت بدون چرخش
+          const segmentStartAngle = winnerIndexInAll * angleStep;
+          // انتخاب یک زاویه تصادفی درون قطعه
+          const randomOffset = Math.random() * angleStep;
+          // نقطه‌ای که نشانگر باید به آن اشاره کند (در سیستم مختصات اصلی)
+          const targetPointAngle = segmentStartAngle + randomOffset;
+
+          // نشانگر در بالای صفحه (زاویه -PI/2) قرار دارد. برای اینکه targetPointAngle به نشانگر برسد،
+          // باید گردونه به اندازه‌ای بچرخد که targetPointAngle + rotation = -PI/2 (mod 2PI)
+          // پس rotation = -PI/2 - targetPointAngle
+          let targetRotation = -Math.PI / 2 - targetPointAngle;
+          // اضافه کردن چند دور کامل برای چرخش نمایشی (4 دور)
+          const totalSpin = targetRotation + (2 * Math.PI * 4);
           const startRotation = this.currentRotation;
           const startTime = performance.now();
-          const duration = 4000; // 4 ثانیه چرخش
+          const duration = 4000; // 4 ثانیه
 
           const spinStep = (now) => {
             const elapsed = now - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            // easing function: ease-out cubic
-            const easeOut = 1 - Math.pow(1 - progress, 3);
+            const easeOut = 1 - Math.pow(1 - progress, 3); // easing ease-out cubic
             this.currentRotation = startRotation + totalSpin * easeOut;
             this.drawWheel(this.currentRotation);
 
@@ -852,8 +874,7 @@
               this.animationId = requestAnimationFrame(spinStep);
             } else {
               this.spinning = false;
-              const winner = this.items[targetIndex];
-              this.resultEl.textContent = `🏆 ${winner.label}`;
+              this.resultEl.textContent = `🏆 ${winnerItem.label}`;
               this.noteEl.textContent = '(برای دریافت به غرفه مراجعه کنید)';
               sfxPrize();
             }
@@ -865,8 +886,8 @@
         /** شروع چرخش (با کلیک کاربر) */
         spin() {
           if (this.spinning || this.hasSpun) return;
-          const targetIndex = this.pickWinner();
-          this.animate(targetIndex);
+          const winnerIndex = this.pickWinner();
+          this.animate(winnerIndex);
         }
 
         /** بازنشانی برای دفعات بعد */
