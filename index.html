@@ -7,12 +7,12 @@
   <!--
     ============================================================
     پروژه: مجموعه بازی‌های تعاملی (حافظه + پازل)
-    نسخه: 19.0 — تاریخ: 2026-06-12
+    نسخه: 20.0 — تاریخ: 2026-06-12
     تغییرات:
-      - افزودن فوتر: "ساخته شده توسط دوره شهید آرمان علی‌وردی شهرری"
-      - اصلاح متن درباره ما (حذف "[۱۵]")
+      - Preload تمام تصاویر کارت‌های حافظه + لوگو
+      - حذف loading="lazy" از تصاویر کارت‌ها (جایگزینی با eager)
     ویژگی‌های پایدار:
-      - صفحه خانه، لینک‌ها، توضیحات
+      - صفحه خانه، لینک‌ها، توضیحات، فوتر
       - حافظه 16/20/24 کارتی با چیدمان واکنش‌گرا
       - پازل 3×3/4×4/5×5 (بدون انیمیشن حرکت)
       - موسیقی، افکت‌های صوتی، رکوردها، ذرات شادی
@@ -20,6 +20,21 @@
       - رفع تداخل انیمیشن لرزش و flip
     ============================================================
   -->
+  <!-- Preload تصاویر بازی حافظه -->
+  <link rel="preload" href="source/arbain.jpg" as="image">
+  <link rel="preload" href="source/borhan.jpg" as="image">
+  <link rel="preload" href="source/haftegi.jpg" as="image">
+  <link rel="preload" href="source/itikaf.jpg" as="image">
+  <link rel="preload" href="source/mashhad.jpg" as="image">
+  <link rel="preload" href="source/moharam.jpg" as="image">
+  <link rel="preload" href="source/olampyc.jpg" as="image">
+  <link rel="preload" href="source/qadr.jpg" as="image">
+  <link rel="preload" href="source/rahian.jpg" as="image">
+  <link rel="preload" href="source/shomal.jpg" as="image">
+  <link rel="preload" href="source/sire.jpg" as="image">
+  <link rel="preload" href="source/clas.jpg" as="image">
+  <!-- Preload لوگو -->
+  <link rel="preload" href="source/logo2.png" as="image">
   <style>
     /* ================================================================
        CSS Custom Properties (متغیرهای طراحی)
@@ -1083,7 +1098,8 @@
             back.innerHTML=generateCardBackSVG();
             const front=document.createElement('div'); front.className='card-face card-front';
             if(c.type==='image'){
-              front.innerHTML=`<div class="card-image-wrapper"><img src="${c.img}" alt="${c.desc}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=padding:16px;color:#888;>تصویر</div>'"></div>`;
+              // حذف loading="lazy" و جایگزینی با eager
+              front.innerHTML=`<div class="card-image-wrapper"><img src="${c.img}" alt="${c.desc}" loading="eager" decoding="async" onerror="this.parentElement.innerHTML='<div style=padding:16px;color:#888;>تصویر</div>'"></div>`;
             } else {
               front.innerHTML=`<div class="card-text-content">${c.title}</div>`;
             }
@@ -1272,4 +1288,4 @@
     })();
   </script>
 </body>
-</html>
+  </html>
